@@ -1,0 +1,26 @@
+{
+    "name": "deuna/magento-deuna-now",
+    "description": "DEUNA NOW for Magento",
+    "authors": [
+        {
+            "name": "DEUNA",
+            "email": "developers@getduna.com",
+            "homepage": "http://deuna.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.4||<=8.4"
+    },
+    "type": "magento2-module",
+    "license": "proprietary",
+    "keywords": ["gateway", "payment"],
+    "homepage": "https://deuna.com",
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "Deuna\\Now\\": ""
+        }
+    }
+}
