@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
+    <menu>
+        <add id="Deuna_Now::custom_section" title="Deuna Now" module="Deuna_Now" sortOrder="25" resource="Deuna_Now::custom_section" action="adminhtml/system_config/edit/section/checkout"/>
+    </menu>
+</config>

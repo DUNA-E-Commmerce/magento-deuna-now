@@ -11,5 +11,18 @@
                     </field>
                 </group>
         </section>
+        <section id="checkout" translate="label" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+            <group id="custom_section" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Deuna Keys</label>
+                <field id="public_key" translate="label" type="textarea" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Public Key</label>
+                    <backend_model>Magento\Config\Model\Config\Backend\Serialized</backend_model>
+                </field>
+                <field id="private_key" translate="label" type="textarea" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Private Key</label>
+                    <backend_model>Magento\Config\Model\Config\Backend\Serialized</backend_model>
+                </field>
+            </group>
+        </section>
     </system>
 </config>
