@@ -9,6 +9,39 @@
                         <label>Enable</label>
                         <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     </field>
+                    
+                    <field id="environment" translate="label" sortOrder="3" type="select" showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Environment</label>
+                        <source_model>Deuna\Now\Model\Config\Source\EnvironmentOptions</source_model>
+                        <comment>Choose the environment for DEUNA Now.</comment>
+                    </field>
+
+                    <field id="public_key_prod"  translate="label" sortOrder="4" type="password" showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Public Key</label>
+                        <depends>
+                            <field id="environment">production</field>
+                        </depends>
+                    </field>
+                    <field id="private_key_prod" translate="label" sortOrder="5" type="password" showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Private Key</label>
+                        <depends>
+                            <field id="environment">production</field>
+                        </depends>
+                    </field>
+
+                    <field id="public_key_sandbox" translate="label" sortOrder="4" type="password" showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Public Key</label>
+                        <depends>
+                            <field id="environment">sandbox</field>
+                        </depends>
+                    </field>
+                    <field id="private_key_sandbox" translate="label" sortOrder="5" type="password" showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Private Key</label>
+                        <depends>
+                            <field id="environment">sandbox</field>
+                        </depends>
+                    </field>
+                    
                 </group>
         </section>
     </system>
