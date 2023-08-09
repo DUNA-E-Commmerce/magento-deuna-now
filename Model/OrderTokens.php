@@ -104,6 +104,12 @@ class OrderTokens
      */
     private $quoteIdMaskFactory;
 
+    private $shippingMethodManagement;
+
+    private $coupon;
+
+    private $saleRule;
+
     /**
      * @var EncryptorInterface
      */
@@ -301,7 +307,7 @@ class OrderTokens
             $this->logger->warning($msg);
             throw new LocalizedException(__($msg));
         }
-        
+
         $response = $this->json->unserialize($response);
 
         if($this->getEnvironment()!=='prod') {
@@ -317,7 +323,7 @@ class OrderTokens
                 'url' => $url,
                 'error' => $error,
             ]);
-            
+
             return $response;
 
             // throw new LocalizedException(__('Error returned with request to ' . $url . '. Code: ' . $error['code'] . ' Error: ' . $error['description']));
@@ -404,7 +410,7 @@ class OrderTokens
                 ]
             ]
         ];
-      
+
        return $this->getShippingData($body, $quote, $stores);
     }
 
@@ -520,7 +526,7 @@ class OrderTokens
     private function getShippingData($order, $quote, $storeObj)
     {
         $shippingOptions = $order['order']['shipping_options'];
-        
+
         $shippingAddress = $quote->getShippingAddress();
 
         $shippingAmount = $this->priceFormat($shippingAddress->getShippingAmount());
