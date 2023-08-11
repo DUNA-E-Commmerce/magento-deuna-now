@@ -35,8 +35,8 @@ class OrderTokens
     const URL_STAGING = 'https://api.stg.deuna.io/merchants/orders';
     const URL_DEVELOPMENT = 'https://api.stg.deuna.io/merchants/orders';
     const CONTENT_TYPE = 'application/json';
-    const PRIVATE_KEY_PRODUCTION = 'private_key_production';
-    const PRIVATE_KEY_STAGING = 'private_key_stage';
+    const PRIVATE_KEY_PRODUCTION = 'private_key_prod';
+    const PRIVATE_KEY_STAGING = 'public_key_sandbox';
     const LOGTAIL_SOURCE = 'magento-bedbath-mx';
     const LOGTAIL_SOURCE_TOKEN = 'DB8ad3bQCZPAshmAEkj9hVLM';
 
