@@ -529,6 +529,8 @@ class OrderTokens
 
         $shippingAddress = $quote->getShippingAddress();
 
+        $shippingAddress = $quote->getShippingAddress();
+
         $shippingAmount = $this->priceFormat($shippingAddress->getShippingAmount());
 
 
@@ -609,7 +611,6 @@ class OrderTokens
         $order['order']['shipping_amount'] = $shippingAmount;
         $order['order']['sub_total'] += $shippingAmount;
         $order['order']['total_amount'] += $shippingAmount;
-
         return $order;
     }
 
