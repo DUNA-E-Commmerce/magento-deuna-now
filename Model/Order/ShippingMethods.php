@@ -186,8 +186,6 @@ class ShippingMethods implements ShippingMethodsInterface
                     ];
                 }
             } else {
-                if(in_array($method->getMethodCode(), ['bopis', 'giftrshipping']))
-                    continue;
 
                 if(!is_null($method->getMethodCode())) {
                     $shippingMethods['shipping_methods'][] = [

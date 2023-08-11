@@ -19,8 +19,8 @@
             <resource ref="anonymous"/>
         </resources>
     </route>
-    <route url="/V1/DUna/capture/:orderId" method="GET">
-        <service class="Deuna\Now\Api\PostManagementInterface" method="captureTransaction"/>
+    <route url="/V1/deuna/public-key" method="GET">
+        <service class="Deuna\Now\Model\ConfigManagement" method="getPublicKey"/>
         <resources>
             <resource ref="anonymous"/>
         </resources>
