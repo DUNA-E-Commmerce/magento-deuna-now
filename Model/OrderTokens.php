@@ -21,7 +21,6 @@ use Magento\Quote\Api\Data\ShippingAssignmentInterface;
 use Magento\Quote\Model\QuoteIdMaskFactory;
 use Magento\Checkout\Api\Data\TotalsInformationInterface;
 use Magento\Checkout\Api\TotalsInformationManagementInterface;
-use Entrepids\StoresLocator\Model\StoresFactory;
 use Magento\Catalog\Helper\Image;
 use Magento\Framework\App\ObjectManager;
 use Magento\Catalog\Api\ProductRepositoryInterface;
@@ -40,9 +39,6 @@ class OrderTokens
     const PRIVATE_KEY_STAGING = 'private_key_stage';
     const LOGTAIL_SOURCE = 'magento-bedbath-mx';
     const LOGTAIL_SOURCE_TOKEN = 'DB8ad3bQCZPAshmAEkj9hVLM';
-
-    /** @var Entrepids\StoresLocator\Model\StoresFactory */
-    private $_stores;
 
     /**
      * @var Session
@@ -143,7 +139,6 @@ class OrderTokens
         TotalsInformationInterface $totalsInformationInterface,
         TotalsInformationManagementInterface $totalsInformationManagementInterface,
         Image $imageHelper,
-        StoresFactory $stores
     ) {
         $this->checkoutSession = $checkoutSession;
         $this->curl = $curl;
@@ -164,7 +159,6 @@ class OrderTokens
         $this->totalsInformationInterface = $totalsInformationInterface;
         $this->totalsInformationManagementInterface = $totalsInformationManagementInterface;
         $this->imageHelper = $imageHelper;
-        $this->_stores = $stores;
         $this->logger = new Logger(self::LOGTAIL_SOURCE);
         $this->logger->pushHandler(new LogtailHandler(self::LOGTAIL_SOURCE_TOKEN));
         $this->imageHelper = $imageHelper;
@@ -290,7 +284,6 @@ class OrderTokens
                 'body' => $body,
             ]);
         }
-
         $configuration['header'] = false;
 
         if($this->getEnvironment()!=='prod') {
@@ -309,7 +302,7 @@ class OrderTokens
             $this->logger->warning($msg);
             throw new LocalizedException(__($msg));
         }
-
+        
         $response = $this->json->unserialize($response);
 
         if($this->getEnvironment()!=='prod') {
@@ -325,7 +318,7 @@ class OrderTokens
                 'url' => $url,
                 'error' => $error,
             ]);
-
+            
             return $response;
 
             // throw new LocalizedException(__('Error returned with request to ' . $url . '. Code: ' . $error['code'] . ' Error: ' . $error['description']));
@@ -368,19 +361,6 @@ class OrderTokens
         $long = 0;
 
         $this->logger->debug("Shipping method {$shippingMethod} selected");
-
-        /**
-         * Used when pickup option is selected in BB&B
-         */
-        if($shippingMethod == "bopis_bopis") {
-            $stores = $this->_stores->create()->load($quote->getBopisJdaStoreCode(),'jda_store_code');
-            $nameStore =  $this->replace_null($stores->getName(),"información no disponible");
-            $addressStore = $this->replace_null($stores->getStreet()." ".$stores->getNumber(),"información no disponible");
-            $lat = $this->replace_null($stores->getLat(),0);
-            $long = $this->replace_null($stores->getLon(),0);
-
-            $shippingMethodSelected = "pickup";
-        }
 
         $discount_amount = $this->getDiscountAmount($quote);
         $subtotal_amount = $quote->getSubtotal();
@@ -541,58 +521,43 @@ class OrderTokens
     private function getShippingData($order, $quote, $storeObj)
     {
         $shippingOptions = $order['order']['shipping_options'];
+        
+        $shippingAddress = $quote->getShippingAddress();
 
-        if($shippingOptions['type'] === 'pickup') {
-            $order['order']['shipping_address'] = [
-                'id' => 0,
-                'user_id' => (string) 0,
-                'first_name' => 'N/A',
-                'last_name' => 'N/A',
-                'phone' => $storeObj->getPhone(),
-                'identity_document' => '-',
-                'address_1' => "Tienda: {$storeObj->getStreet()}, {$storeObj->getNumber()}",
-                'address_2' => $storeObj->getColony(),
-                'city' => ($storeObj->getTown()==='-') ? "Ciudad de México" : $storeObj->getTown(),
-                'zipcode' => $storeObj->getZipCode(),
-                'state_code' => 'CDMX',
-                'state_name' => $storeObj->getState(),
-                'country_code' => (empty($storeObj->getCountry())) ? "MX" : $storeObj->getCountry(),
-                'additional_description' => 'Recoger en tienda',
-                'address_type' => 'home',
-                'is_default' => true,
-                'lat' => (float) $storeObj->getLat(),
-                'lng' => (float) $storeObj->getLon(),
-            ];
-        } else {
-            $shippingAddress = $quote->getShippingAddress();
-            $shippingAmount = $this->priceFormat($shippingAddress->getShippingAmount());
-            $order['order']['shipping_address'] = [
-                'id' => 0,
-                'user_id' => (string) 0,
-                'first_name' => '-',
-                'last_name' => '-',
-                'phone' => '-',
-                'identity_document' => '',
-                'lat' => 0,
-                'lng' => 0,
-                'address_1' => '-',
-                'address_2' => '-',
-                'city' => '-',
-                'zipcode' => '-',
-                'state_name' => '-',
-                'country_code' => 'MX',
-                'additional_description' => '',
-                'address_type' => '',
-                'is_default' => false,
-                'created_at' => '',
-                'updated_at' => '',
-            ];
-            $order['order']['status'] = 'pending';
-            $order['order']['shipping_amount'] = $shippingAmount;
-            $order['order']['sub_total'] += $shippingAmount;
-            $order['order']['total_amount'] += $shippingAmount;
-        }
+        $shippingAmount = $this->priceFormat($shippingAddress->getShippingAmount());
 
+        $address = $shippingAddress->getStreet();
+
+        $address_1 =  $address[0];
+        $address_2 =  $address[1];
+
+        $order['order']['shipping_address'] = [
+            'id' => 0,
+            'user_id' => (string) 0,
+            'first_name' => $shippingAddress->getFirstname(),
+            'last_name' => $shippingAddress->getLastname(),
+            'phone' => $shippingAddress->getTelephone(),
+            'identity_document' => '',
+            'lat' => 0,
+            'lng' => 0,
+            'address_1' => $address_1,
+            'address_2' => $address_2,
+            'city' => $shippingAddress->getCity(),
+            'zipcode' => $shippingAddress->getPostcode(),
+            'state_name' => $shippingAddress->getRegion(),
+            'country_code' => $shippingAddress->getCountryId(),
+            'additional_description' => '',
+            'address_type' => 'home',
+            'is_default' => false,
+            'created_at' => '',
+            'updated_at' => '',
+        ];
+
+        $order['order']['status'] = 'pending';
+        $order['order']['shipping_amount'] = $shippingAmount;
+        $order['order']['sub_total'] += $shippingAmount;
+        $order['order']['total_amount'] += $shippingAmount;
+        
         return $order;
     }
 
