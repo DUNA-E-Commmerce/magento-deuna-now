@@ -275,38 +275,19 @@ const DEUNA_PUBLIC_API_KEY = 'ab88c4b4866150ebbce7599c827d00f9f238c34e42baa095c9
 
 async function getOrderToken(Url) {
 
+  const tokenUrl = Url.build('rest/V1/Deuna/token');
 
-  const tokenUrl = Url.build('rest/V1/DUna/token');
-
-  // $.ajax({
-  //   method: 'GET',
-  //   url: tokenUrl
-  // })
-  // .done(async function (data) {
-  //     // Configure Modal based on data returned from token endpoint
-  //     await self.configure(data);
-  //     // Trigger DEUNA Checkout Modal
-  //     await self.dunaCheckout.show();
-  // })
-  // .error(function (error, status, message) {
-  //     alert(`Error DEUNA (${status}): Falló la petición para obtener el token de pago.`);
-
-  //     window.location.reload();
-  // });
-
-
-  const response = await fetch(`https://api.stg.deuna.io/merchants/orders`, {
-    method: "POST",
+  const response = await fetch(tokenUrl, {
+    method: "GET",
     headers: {
       'Accept': 'application/json',
-      'Content-Type': 'application/json',
-      'x-api-key': DEUNA_PUBLIC_API_KEY
-    },
-    body: JSON.stringify(data),
+      'Content-Type': 'application/json'
+    }
   });
-  const newResponse = await response.json();
+  var newResponse = await response.json();
+  newResponse = JSON.parse(newResponse);
 
-  return newResponse.token;
+  return newResponse.orderToken;
 
 }
 
@@ -325,37 +306,29 @@ require([
 
   $(document).ready(function () {
 
-    // function addCdnScript(url) {
-    //   var scriptElement = document.createElement("script");
-    //   scriptElement.src = url;
-    //   document.head.appendChild(scriptElement);
-    // }
-
-    // addCdnScript("https://cdn.stg.deuna.io/cdl/index.js");
-    // addCdnScript("https://cdn.dev.deuna.io/checkout-widget/v1.0.0/index.js");
+    window.DeunaCDL = DeunaCDL;
+    window.DeunaPay = DeunaNow;
 
     $(document).on('click', '.deuna-button', async function (e) {
-
-      window.DeunaCDL = DeunaCDL;
-      window.DeunaPay = DeunaNow;
-      
       console.log('Deuna Now');
       var orderToken = await getOrderToken(Url);
+      
       console.log('Order Token: ' + orderToken);
+
+      var pay = new window.DeunaPay();
 
       const configs = {
         orderToken: orderToken,
         apiKey: DEUNA_PUBLIC_API_KEY,
         env: 'staging',
       }
-
-      var pay = new window.DeunaPay();
       pay.configure(configs);
+      
 
       const params = {
         callbacks: {
           onPaymentSuccess: () => {
-            // Código para el manejo de éxito de pago
+            window.location.href = '/checkout/onepage/success/';
           },
           onClose: () => {
             // Código para el manejo de cierre

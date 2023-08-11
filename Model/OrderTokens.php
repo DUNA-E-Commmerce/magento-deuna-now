@@ -530,6 +530,8 @@ class OrderTokens
 
         $shippingAddress = $quote->getShippingAddress();
 
+        $shippingAddress = $quote->getShippingAddress();
+
         $shippingAmount = $this->priceFormat($shippingAddress->getShippingAmount());
 
 
