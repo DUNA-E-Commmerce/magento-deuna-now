@@ -47,7 +47,7 @@ require(components, function ($, Url, DeunaCDL, DeunaNow) {
 
     if (!DEUNA_PUBLIC_KEY){
       alert('Error Getting Keys');
-      return; 
+      return;
     }
 
     console.log('Public Key: ' + DEUNA_PUBLIC_KEY);
@@ -61,7 +61,7 @@ require(components, function ($, Url, DeunaCDL, DeunaNow) {
       if (!tokenResponseObject.orderToken){
         console.log(tokenResponseObject);
         alert('Error Generating Order Token');
-        return; 
+        return;
       }
       var orderToken = tokenResponseObject.orderToken;
       var orderTokenString = orderToken.toString();
@@ -78,7 +78,6 @@ require(components, function ($, Url, DeunaCDL, DeunaNow) {
       }
 
       pay.configure(configs);
-
       const params = {
         callbacks: {
           onPaymentSuccess: () => {
