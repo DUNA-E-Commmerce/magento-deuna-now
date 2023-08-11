@@ -1,0 +1,14 @@
+<config  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
+    <event name="sales_quote_address_collect_totals_before">
+        <observer name="checkout_cart_quote" instance="Deuna\Now\Observer\CheckoutCartQuoteObserver"/>
+    </event>
+
+    <event name="sales_order_save_after">
+        <observer name="order_update_observer" instance="Deuna\Now\Observer\OrderUpdateObserver" />
+    </event>
+    
+    <event name="salesrule_validator_process">
+        <observer name="deuna_now_apply_discount_observer" instance="Deuna\Now\Observer\ApplyDiscountObserver" />
+    </event>
+
+</config>
