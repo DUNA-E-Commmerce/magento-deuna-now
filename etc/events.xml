@@ -6,11 +6,11 @@
     <event name="sales_order_save_after">
         <observer name="order_update_observer" instance="Deuna\Now\Observer\OrderUpdateObserver" />
     </event>
-    
+
     <event name="salesrule_validator_process">
         <observer name="deuna_now_apply_discount_observer" instance="Deuna\Now\Observer\ApplyDiscountObserver" />
     </event>
-    
+
     <event name="sales_order_payment_refund">
         <observer name="deuna_now_refund_observer" instance="Deuna\Now\Observer\RefundObserver" />
     </event>
