@@ -204,8 +204,7 @@ class OrderTokens
         } else {
             $privateKey = $this->helper->getGeneralConfig(self::PRIVATE_KEY_PRODUCTION);
         }
-
-        return $this->encryptor->decrypt($privateKey);
+        return $privateKey;
     }
 
     /**
@@ -405,8 +404,8 @@ class OrderTokens
                 ]
             ]
         ];
-
-        return $this->getShippingData($body, $quote, $stores);
+      
+       return $this->getShippingData($body, $quote, $stores);
     }
 
     /**
@@ -526,10 +525,19 @@ class OrderTokens
 
         $shippingAmount = $this->priceFormat($shippingAddress->getShippingAmount());
 
+
         $address = $shippingAddress->getStreet();
 
-        $address_1 =  $address[0];
-        $address_2 =  $address[1];
+        $address_1 = "";
+        $address_2 = "";
+
+        if (isset($address) && is_array($address) && array_key_exists(0, $address)) {
+            $address_1 =  $address[0];
+        }
+
+        if (isset($address) && is_array($address) && array_key_exists(1, $address)) {
+            $address_2 =  $address[1];
+        }
 
         $order['order']['shipping_address'] = [
             'id' => 0,
@@ -540,8 +548,8 @@ class OrderTokens
             'identity_document' => '',
             'lat' => 0,
             'lng' => 0,
-            'address_1' => $address_1,
-            'address_2' => $address_2,
+            'address1' => $address_1,
+            'address2' => $address_2,
             'city' => $shippingAddress->getCity(),
             'zipcode' => $shippingAddress->getPostcode(),
             'state_name' => $shippingAddress->getRegion(),
@@ -553,11 +561,49 @@ class OrderTokens
             'updated_at' => '',
         ];
 
+        $billingAddress = $quote->getBillingAddress();
+
+
+        $address = $billingAddress->getStreet();
+        $baddress_1 = "";
+        $baddress_2 = "";
+
+
+        if (isset($address) && is_array($address) && array_key_exists(0, $address)) {
+            $baddress_1 =  $address[0];
+        }
+
+        if (isset($address) && is_array($address) && array_key_exists(1, $address)) {
+            $baddress_2 =  $address[1];
+        }
+
+        $order['order']['billing_address'] = [
+            'first_name' => $billingAddress->getFirstname(),
+            'last_name' => $billingAddress->getLastname(),
+            'phone' => $billingAddress->getTelephone(),
+            'identity_document' => '',
+            'lat' => 0,
+            'lng' => 0,
+            'address1' => $baddress_1,
+            'address2' => $baddress_2,
+            'city' => $billingAddress->getCity(),
+            'zipcode' => $billingAddress->getPostcode(),
+            'state_name' => $billingAddress->getRegion(),
+            'country_code' => $billingAddress->getCountryId(),
+            'country' => $billingAddress->getCountryId(),
+            'additional_description' => '',
+            'address_type' => 'home',
+            'is_default' => false,
+            'created_at' => '',
+            'updated_at' => '',
+            'email' => $billingAddress->getEmail(),
+        ];
+
         $order['order']['status'] = 'pending';
         $order['order']['shipping_amount'] = $shippingAmount;
         $order['order']['sub_total'] += $shippingAmount;
         $order['order']['total_amount'] += $shippingAmount;
-        
+
         return $order;
     }
 
@@ -621,22 +667,28 @@ class OrderTokens
      */
     private function tokenize(): array
     {
-        $quote = $this->checkoutSession->getQuote();
 
-        $body = $this->json->serialize($this->getBody($quote));
+        try {
 
-        $body = json_encode($this->getBody($quote));
+            $quote = $this->checkoutSession->getQuote();
 
-        $response = $this->request($body);
+            $body = $this->json->serialize($this->getBody($quote));
+            $body = json_encode($this->getBody($quote));
 
-        if(!empty($response['error'])) {
-            $quote->setIsActive(false);
-            $quote->save();
+            $response = $this->request($body);
 
-            throw new LocalizedException(__($response['error']['description']));
+            if (!empty($response['error'])) {
+                $quote->setIsActive(false);
+                $quote->save();
+
+                throw new LocalizedException(__($response['error']['description']));
+            }
+
+            return $this->request($body);
+        } catch (Exception $e) {
+
+            var_dump($e);die;
         }
-
-        return $this->request($body);
     }
 
     /**
