@@ -410,7 +410,6 @@ class OrderTokens
                 ]
             ]
         ];
-
        return $this->getShippingData($body, $quote, $stores);
     }
 
