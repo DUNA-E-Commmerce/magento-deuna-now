@@ -13,7 +13,7 @@ class Data extends AbstractHelper
     /**
      * constant
      */
-    const XML_PATH_DUNA = 'duna/';
+    const XML_PATH_DUNA = 'payment/deuna/';
     const MODE_PRODUCTION = 2;
     const MODE_STAGING = 1;
 
@@ -57,7 +57,7 @@ class Data extends AbstractHelper
      */
     public function getGeneralConfig($code, $storeId = null)
     {
-        return $this->getConfigValue(self::XML_PATH_DUNA .'config/'. $code, $storeId);
+        return $this->getConfigValue(self::XML_PATH_DUNA . $code, $storeId);
     }
 
     /**

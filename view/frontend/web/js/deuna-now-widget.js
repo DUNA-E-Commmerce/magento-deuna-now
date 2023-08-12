@@ -56,24 +56,29 @@ require(components, function ($, Url, DeunaCDL, DeunaNow) {
 
       var tokenResponse = await fetchJson(Url.build('rest/V1/Deuna/token'));
 
-      if (!tokenResponse.orderToken){
-        console.log(tokenResponse);
+      var tokenResponseObject = JSON.parse(tokenResponse);
+
+      if (!tokenResponseObject.orderToken){
+        console.log(tokenResponseObject);
         alert('Error Generating Order Token');
         return; 
       }
-      
-      console.log('Order Token: ' + tokenResponse.orderToken);
+      var orderToken = tokenResponseObject.orderToken;
+      var orderTokenString = orderToken.toString();
+
+      console.log('Order Token: ' + orderTokenString);
+      console.log('Environment: ' + environment);
 
       var pay = new window.DeunaPay();
 
       const configs = {
-        orderToken: tokenResponse.orderToken,
-        apiKey: deunaPublicKey,
+        orderToken: orderTokenString,
+        apiKey: DEUNA_PUBLIC_KEY,
         env: environment,
       }
 
       pay.configure(configs);
-      
+
       const params = {
         callbacks: {
           onPaymentSuccess: () => {
