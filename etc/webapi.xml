@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Webapi:etc/webapi.xsd">
+    <route url="/V1/Deuna/token" method="GET">
+        <service class="Deuna\Now\Api\PostManagementInterface" method="getToken"/>
+        <resources>
+            <resource ref="anonymous"/>
+        </resources>
+    </route>
+    <route url="/V1/orders/notify" method="POST">
+        <service class="Deuna\Now\Api\PostManagementInterface" method="notify"/>
+        <resources>
+            <resource ref="anonymous"/>
+        </resources>
+    </route>
+    <route url="/V1/orders/:cartId/shipping-methods" method="POST">
+        <service class="Deuna\Now\Api\ShippingMethodsInterface" method="get"/>
+        <resources>
+            <resource ref="anonymous"/>
+        </resources>
+    </route>
+    <route url="/V1/deuna/public-key" method="GET">
+        <service class="Deuna\Now\Model\ConfigManagement" method="getPublicKey"/>
+        <resources>
+            <resource ref="anonymous"/>
+        </resources>
+    </route>
+</routes>

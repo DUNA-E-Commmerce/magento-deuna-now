@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <!-- <type name="Magento\Quote\Api\ChangeQuoteControlInterface">
+        <plugin name="UpdateQuoteWhenRestricted" type="Deuna\Now\Plugin\UpdateQuoteWhenRestrictedPlugin"/>
+    </type>
+    <type name="Magento\Checkout\Controller\Index\Index">
+        <plugin name="hideCheckout" type="Deuna\Now\Plugin\Checkout\Index" disabled="false"/>
+    </type>
+    <preference for="Deuna\Now\Api\CheckoutInterface" type="Deuna\Now\Model\Checkout" /> -->
+    <preference for="Deuna\Now\Api\PostManagementInterface" type="Deuna\Now\Model\PostManagement"/>
+    <!-- <preference for="Deuna\Now\Api\ShippingMethodsInterface" type="Deuna\Now\Model\Order\ShippingMethods"/> -->
+    <!-- Custom Logger -->
+    <type name="Deuna\Now\Logger\Logger">
+        <arguments>
+            <argument name="name" xsi:type="string">Deuna_Now</argument>
+            <argument name="handlers"  xsi:type="array">
+                <item name="system" xsi:type="object">Deuna\Now\Logger\Handler</item>
+            </argument>
+        </arguments>
+    </type>
+    <!-- <type name="Magento\Paypal\Model\Express">
+        <plugin name="disable_paypal_express_observer" type="Deuna\Now\Plugin\DisablePaypalExpressObserver" sortOrder="1" disabled="false" />
+    </type> -->
+</config>

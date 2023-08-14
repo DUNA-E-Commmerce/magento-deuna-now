@@ -22,10 +22,9 @@
         </div>
         <div class="actions-toolbar">
             <div class="primary">
-                <button class="action primary checkout"
+                <button class="action primary checkout deuna-button" id="deuna-button"
                         type="submit"
                         data-bind="
-                        click: placeOrder,
                         attr: {title: $t('Place Order')},
                         css: {disabled: !isPlaceOrderActionAllowed()},
                         enable: (getCode() == isChecked())
@@ -34,6 +33,7 @@
                     <span data-bind="i18n: 'Place Order'"></span>
                 </button>
             </div>
+            <div id='root'></div>
         </div>
     </div>
 </div>
