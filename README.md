@@ -31,3 +31,5 @@ Inicia sesión en el panel de administración de Magento.
 Ve a "Stores" (Tiendas) > "Configuration" (Configuración) > "Sales" (Ventas) > "Payment Methods" (Métodos de Pago).
 
 Configura las opciones relacionadas con el método de pago "Deuna Now Payment".
+
+...
