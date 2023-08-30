@@ -3,7 +3,7 @@
  * @type {Array} components - An array of required module names (e.g., 'jquery', 'mage/url').
  * @type {string} environment - Represents the current environment determined based on the hostname.
  */
-var components = [ 'jquery', 'mage/url'];
+var components = [ 'jquery'];
 var environment;
 
 /**
@@ -33,9 +33,9 @@ getEnvironment();
 /**
  * Initializes components and handles the click event for the "deuna-button".
  * @function
- * @param {Array} components - An array of required modules (jQuery, Url, DeunaCDL, DeunaNow).
+ * @param {Array} components - An array of required modules (jQuery, DeunaCDL, DeunaNow).
  */
-require(components, function ($, Url, DeunaCDL, DeunaNow) {
+require(components, function ($, DeunaCDL, DeunaNow) {
   'use strict';
 
   $(document).ready(async function () {
@@ -43,7 +43,9 @@ require(components, function ($, Url, DeunaCDL, DeunaNow) {
     window.DeunaCDL = DeunaCDL;
     window.DeunaPay = DeunaNow;
 
-    const DEUNA_PUBLIC_KEY = await fetchJson(Url.build('rest/V1/deuna/public-key'));
+    var hostname = document.location.origin;
+
+    const DEUNA_PUBLIC_KEY = await fetchJson(hostname + '/rest/V1/deuna/public-key');
 
     if (!DEUNA_PUBLIC_KEY){
       alert('Error Getting Keys');
@@ -54,7 +56,7 @@ require(components, function ($, Url, DeunaCDL, DeunaNow) {
 
     $(document).on('click', '.deuna-button', async function (e) {
 
-      var tokenResponse = await fetchJson(Url.build('rest/V1/Deuna/token'));
+      var tokenResponse = await fetchJson(hostname + '/rest/V1/Deuna/token');
 
       var tokenResponseObject = JSON.parse(tokenResponse);
 

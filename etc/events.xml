@@ -14,13 +14,4 @@
     <event name="sales_order_payment_refund">
         <observer name="deuna_now_refund_observer" instance="Deuna\Now\Observer\RefundObserver" />
     </event>
-
-    <event name="sales_order_payment_refund">
-        <observer name="deuna_now_refund_observer" instance="Deuna\Now\Observer\RefundObserver" />
-    </event>
-
-    <event name="sales_order_payment_refund">
-        <observer name="deuna_now_refund_observer" instance="Deuna\Now\Observer\RefundObserver" />
-    </event>
-
 </config>
