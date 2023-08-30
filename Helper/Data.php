@@ -135,6 +135,12 @@ class Data extends AbstractHelper
         return $sql;
     }
 
+    /**
+     * Get the region ID based on the state name.
+     *
+     * @param string $stateName The name of the state.
+     * @return int The ID of the region corresponding to the state, or 0 if not found.
+     */
     public function getRegionId($stateName)
     {
         $region = $this->regionCollectionFactory->create()
