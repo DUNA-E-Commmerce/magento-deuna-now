@@ -402,10 +402,7 @@ class OrderTokens
                 'redirect_url' => $domain . 'checkout/onepage/success',
                 'webhook_urls' => [
                     'notify_order' => $domain . 'rest/V1/orders/notify',
-                    'apply_coupon' => $domain . 'duna/set/coupon/order/{order_id}',
-                    'remove_coupon' => $domain . 'duna/remove/coupon/order/{order_id}/coupon/{coupon_code}',
                     'shipping_rate' => '',
-                    'update_shipping_method' => $domain . 'duna/set/shippingmethod/order/{order_id}/method'
                 ]
             ]
         ];
