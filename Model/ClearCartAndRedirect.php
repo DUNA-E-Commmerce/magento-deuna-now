@@ -14,9 +14,9 @@ class ClearCartAndRedirect
     }
 
     /**
-     * Limpia el carrito de compras.
+     * Clears the shopping cart.
      *
-     * @return bool Éxito o fallo al limpiar el carrito.
+     * @return bool Success or failure in clearing the cart.
      */
     public function clearCart()
     {
