@@ -45,7 +45,7 @@ require(components, function ($, DeunaCDL, DeunaNow) {
 
     var hostname = document.location.origin;
 
-    const DEUNA_PUBLIC_KEY = await fetchJson(hostname + '/rest/V1/deuna/public-key');
+    const DEUNA_PUBLIC_KEY = await fetchJson('GET', hostname + '/rest/V1/deuna/public-key');
 
     if (!DEUNA_PUBLIC_KEY){
       alert('Error Getting Keys');
@@ -56,7 +56,7 @@ require(components, function ($, DeunaCDL, DeunaNow) {
 
     $(document).on('click', '.deuna-button', async function (e) {
 
-      var tokenResponse = await fetchJson(hostname + '/rest/V1/Deuna/token');
+      var tokenResponse = await fetchJson('GET', hostname + '/rest/V1/Deuna/token');
 
       var tokenResponseObject = JSON.parse(tokenResponse);
 
@@ -82,9 +82,14 @@ require(components, function ($, DeunaCDL, DeunaNow) {
       pay.configure(configs);
       const params = {
         callbacks: {
-          onPaymentSuccess: () => {
-            console.log('Success');
-            window.location.href = '/checkout/onepage/success/';
+          onPaymentSuccess: async () => {
+            let clearCar = await fetchJson('POST', hostname + '/rest/V1/deuna/clear-car');
+
+            if (clearCar) {
+              console.log('Success');
+            } else {
+              console.log('Error while clearing cart.');
+            }
           },
           onClose: () => {
             console.log('Error');
@@ -105,13 +110,13 @@ require(components, function ($, DeunaCDL, DeunaNow) {
  * Fetches JSON data from the specified URL using the GET method and headers.
  * @async
  * @function fetchJson
+ * @param {string} method -The Method of request.
  * @param {string} urlRequest - The URL to fetch JSON data from.
  * @returns {Promise} A Promise that resolves with the JSON data retrieved from the URL.
  */
-async function fetchJson(urlRequest) {
-
+async function fetchJson(method, urlRequest) {
   const response = await fetch(urlRequest, {
-    method: "GET",
+    method: method,
     headers: {
       'Accept': 'application/json',
       'Content-Type': 'application/json'
