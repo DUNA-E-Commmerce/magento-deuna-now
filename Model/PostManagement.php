@@ -285,9 +285,9 @@ class PostManagement
                 $processor = "{$processor}_3ds";
         }
 
-        $this->logger->debug("DEUNA Payment Method: {$this->mapPaymentMethod($processor)}");
+        $this->logger->debug("Payment Method: {$processor}");
 
-        $quote->getPayment()->setMethod($this->mapPaymentMethod($processor));
+        $quote->getPayment()->setMethod($processor);
 
         $quote->setCustomerFirstname($order['shipping_address']['first_name']);
         $quote->setCustomerLastname($order['shipping_address']['last_name']);
@@ -615,27 +615,5 @@ class PostManagement
         $payment->save();
     }
 
-    public function mapPaymentMethod($paymentMethod)
-    {
-        switch ($paymentMethod) {
-            case 'adyen':
-                return 'adyen_cc';
-                break;
-            case 'evopayment':
-                return 'tns_hpf';
-                break;
-            case 'amex':
-                return 'amex_hpf';
-                break;
-            case 'evopayment_3ds':
-                return 'tns_hosted';
-                break;
-            case 'paypal_commerce':
-                return 'paypal_express_tmp';
-                break;
-            default:
-                return 'deunacheckout';
-                break;
-        }
-    }
+    
 }
