@@ -87,6 +87,9 @@ require(components, function ($, DeunaCDL, DeunaNow) {
 
             if (clearCar) {
               console.log('Success');
+              setTimeout(function() {
+                  window.location.href = '/checkout/onepage/success/';
+              }, 5000);
             } else {
               console.log('Error while clearing cart.');
             }

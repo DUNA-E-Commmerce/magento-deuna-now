@@ -755,8 +755,4 @@ class OrderTokens
         $this->logger->debug('Payment Method List', $output);
     }
 
-    private function replace_null($value, $replace) {
-        if (is_null($value)) return $replace;
-        return $value;
-    }
 }
