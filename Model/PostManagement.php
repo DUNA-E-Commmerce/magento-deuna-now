@@ -14,7 +14,6 @@ use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Deuna\Now\Helper\Data;
 use Deuna\Now\Model\CreateInvoice;
-use Deuna\Now\Model\Order\ShippingMethods;
 use Deuna\Now\Model\OrderTokens;
 use Monolog\Logger;
 use Logtail\Monolog\LogtailHandler;
@@ -85,8 +84,6 @@ class PostManagement {
 
     protected $orderRepository;
 
-    protected $deunaShipping;
-
     protected $orderManagement;
 
     public function __construct(
@@ -101,7 +98,6 @@ class PostManagement {
         CustomerRepositoryInterface $customerRepository,
         StoreManagerInterface $storeManager,
         OrderRepositoryInterface $orderRepository,
-        ShippingMethods $deunaShipping,
         OrderManagementInterface $orderManagement
     ) {
         $this->request = $request;
@@ -115,7 +111,6 @@ class PostManagement {
         $this->customerRepository = $customerRepository;
         $this->storeManager = $storeManager;
         $this->orderRepository = $orderRepository;
-        $this->deunaShipping = $deunaShipping;
         $this->orderManagement = $orderManagement;
         $this->logger = new Logger(self::LOGTAIL_SOURCE);
         $this->logger->pushHandler(new LogtailHandler(self::LOGTAIL_SOURCE_TOKEN));
@@ -382,7 +377,7 @@ class PostManagement {
         $billingData = $data['billing_address'];
 
         //  Billing Address
-        $billingRegionId = $this->deunaShipping->getRegionId($billingData['state_name']);
+        $billingRegionId = $this->helper->getRegionId($billingData['state_name']);
 
         $billing_address = [
             'firstname' => $billingData['first_name'],
@@ -398,7 +393,7 @@ class PostManagement {
         $quote->getBillingAddress()->addData($billing_address);
 
         // Shipping Address
-        $shippingRegionId = $this->deunaShipping->getRegionId($shippingData['state_name']);
+        $shippingRegionId = $this->helper->getRegionId($shippingData['state_name']);
 
         $shipping_address = [
             'firstname' => (empty($shippingData['first_name']) ? $billingData['first_name'] : $billingData['first_name']),

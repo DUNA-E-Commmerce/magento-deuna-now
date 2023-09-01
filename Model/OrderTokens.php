@@ -404,7 +404,6 @@ class OrderTokens
                     'notify_order' => $domain . 'rest/V1/orders/notify',
                     'apply_coupon' => $domain . 'duna/set/coupon/order/{order_id}',
                     'remove_coupon' => $domain . 'duna/remove/coupon/order/{order_id}/coupon/{coupon_code}',
-                    'get_shipping_methods' => $domain . 'rest/V1/orders/{order_id}/shipping-methods',
                     'shipping_rate' => '',
                     'update_shipping_method' => $domain . 'duna/set/shippingmethod/order/{order_id}/method'
                 ]
