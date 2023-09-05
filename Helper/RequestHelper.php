@@ -18,7 +18,7 @@ class RequestHelper extends \Magento\Framework\App\Helper\AbstractHelper
     const URL_DEVELOPMENT = 'https://api.dev.deuna.io';
     const CONTENT_TYPE = 'application/json';
     const PRIVATE_KEY_PRODUCTION = 'private_key_prod';
-    const PRIVATE_KEY_STAGING = 'public_key_sandbox';
+    const PRIVATE_KEY_STAGING = 'private_key_sandbox';
     const LOGTAIL_SOURCE = 'magento-bedbath-mx';
     const LOGTAIL_SOURCE_TOKEN = 'DB8ad3bQCZPAshmAEkj9hVLM';
     const DEV_PRIVATE_KEY = 'd09ae647fceb2a30e6fb091e512e7443b092763a13f17ed15e150dc362586afd92571485c24f77a4a3121bc116d8083734e27079a25dc44493496198b84f';
@@ -188,7 +188,7 @@ class RequestHelper extends \Magento\Framework\App\Helper\AbstractHelper
             $privateKey = $this->helper->getGeneralConfig(self::PRIVATE_KEY_PRODUCTION);
         }
 
-        return $this->encryptor->decrypt($privateKey);
+        return $privateKey;
     }
 
     public function getEnvironment()

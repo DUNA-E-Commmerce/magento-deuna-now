@@ -66,15 +66,9 @@ class OrderUpdateObserver implements ObserverInterface
             $endpoint = "/merchants/orders/{$orderToken}/void";
         }
 
-        $headers = [
-            'Accept: application/json',
-            'Content-Type: application/json',
-        ];
-
         $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
         $requestHelper = $objectManager->get(\Deuna\Now\Helper\RequestHelper::class);
-
-        $requestHelper->request($endpoint, 'POST', '', $headers);
+        $requestHelper->request($endpoint, 'POST');
     }
 
 }

@@ -38,6 +38,8 @@ getEnvironment();
 require(components, function ($, DeunaCDL, DeunaNow) {
   'use strict';
 
+  var interval = setInterval(checkAndReload, 1000);
+
   $(document).ready(async function () {
 
     window.DeunaCDL = DeunaCDL;
@@ -87,9 +89,8 @@ require(components, function ($, DeunaCDL, DeunaNow) {
 
             if (clearCar) {
               console.log('Success');
-              setTimeout(function() {
-                  window.location.href = '/checkout/onepage/success/';
-              }, 5000);
+              window.location.href = '/checkout/onepage/success/';
+              
             } else {
               console.log('Error while clearing cart.');
             }
@@ -127,4 +128,20 @@ async function fetchJson(method, urlRequest) {
   });
 
   return await response.json();
+}
+
+/**
+ * Checks for the existence of an HTML element with the ID 'deuna' and adds a click event listener to it.
+ * When the element is clicked, it reloads the current page.
+ * @function checkAndReload
+ * @returns {void}
+ */
+function checkAndReload() {
+  var radioElement = document.getElementById('deuna');
+  
+  if (radioElement) {
+      radioElement.addEventListener('click', function() {
+          location.reload();
+      });
+  }
 }
