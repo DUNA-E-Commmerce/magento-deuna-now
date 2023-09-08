@@ -1,10 +1,10 @@
 <?php
-
 namespace Deuna\Now\Model;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
 
-class ConfigManagement {
+class ConfigManagement
+{
 
     protected $scopeConfig;
 
@@ -22,10 +22,10 @@ class ConfigManagement {
     public function getPublicKey()
     {
         $enviroment = $this->scopeConfig->getValue('payment/deuna/environment');
-        
-        if ($enviroment === 'production'){
+
+        if ($enviroment === 'production') {
             return $this->scopeConfig->getValue('payment/deuna/public_key_prod');
-        }else{
+        } else {
             return $this->scopeConfig->getValue('payment/deuna/public_key_sandbox');
         }
     }

@@ -2,6 +2,7 @@
 
 namespace Deuna\Now\Helper;
 
+use Magento\Directory\Model\ResourceModel\Region\CollectionFactory;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
@@ -28,14 +29,22 @@ class Data extends AbstractHelper
      */
     protected $resource;
 
+    /**
+     * @var CollectionFactory
+     */
+    private $regionCollectionFactory;
+
+
     public function __construct(
         Context $context,
         Logger $logger,
-        ResourceConnection $resource
+        ResourceConnection $resource,
+        CollectionFactory $regionCollectionFactory,
     ) {
         parent::__construct($context);
         $this->logger = $logger;
         $this->resource = $resource;
+        $this->regionCollectionFactory = $regionCollectionFactory;
     }
 
     /**
@@ -65,15 +74,6 @@ class Data extends AbstractHelper
      */
     public function getEnv(): string
     {
-        // $mode = $this->getGeneralConfig('mode');
-        // if ($mode == self::MODE_PRODUCTION) {
-        //     $env = 'production';
-        // }
-        // if ($mode == self::MODE_STAGING) {
-        //     $env = 'staging';
-        // }
-        // return $env;
-
         $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
         $storeManager = $objectManager->get('\Magento\Store\Model\StoreManagerInterface');
 
@@ -126,14 +126,6 @@ class Data extends AbstractHelper
         $output = null;
         $connection  = $this->resource->getConnection();
 
-        // $tableName = $connection->getTableName('sales_order_payment');
-        // $data = [
-        //     'method' => $paypalCode,
-        // ];
-        // $where = [
-        //     'entity_id = ?' => (int)$id,
-        // ];
-
         $sql = "UPDATE sales_order_payment
                 SET method = '$paypalCode'
                 WHERE entity_id = $id";
@@ -142,4 +134,21 @@ class Data extends AbstractHelper
 
         return $sql;
     }
+
+    /**
+     * Get the region ID based on the state name.
+     *
+     * @param string $stateName The name of the state.
+     * @return int The ID of the region corresponding to the state, or 0 if not found.
+     */
+    public function getRegionId($stateName)
+    {
+        $region = $this->regionCollectionFactory->create()
+                  ->addRegionNameFilter($stateName)
+                  ->getFirstItem()
+                  ->toArray();
+
+        return empty($region) ? 0 : $region['region_id'];
+    }
+    
 }

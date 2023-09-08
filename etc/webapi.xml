@@ -13,14 +13,14 @@
             <resource ref="anonymous"/>
         </resources>
     </route>
-    <route url="/V1/orders/:cartId/shipping-methods" method="POST">
-        <service class="Deuna\Now\Api\ShippingMethodsInterface" method="get"/>
+    <route url="/V1/deuna/public-key" method="GET">
+        <service class="Deuna\Now\Model\ConfigManagement" method="getPublicKey"/>
         <resources>
             <resource ref="anonymous"/>
         </resources>
     </route>
-    <route url="/V1/deuna/public-key" method="GET">
-        <service class="Deuna\Now\Model\ConfigManagement" method="getPublicKey"/>
+    <route url="/V1/deuna/clear-car" method="POST">
+        <service class="Deuna\Now\Model\ClearCartAndRedirect" method="clearCart"/>
         <resources>
             <resource ref="anonymous"/>
         </resources>

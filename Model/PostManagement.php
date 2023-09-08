@@ -1,4 +1,5 @@
 <?php
+
 namespace Deuna\Now\Model;
 
 use Magento\Framework\Webapi\Rest\Request;
@@ -14,14 +15,13 @@ use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Deuna\Now\Helper\Data;
 use Deuna\Now\Model\CreateInvoice;
-use Deuna\Now\Model\Order\ShippingMethods;
 use Deuna\Now\Model\OrderTokens;
 use Monolog\Logger;
 use Logtail\Monolog\LogtailHandler;
-use Magento\Sales\Model\Order;
 use Magento\Sales\Api\OrderManagementInterface;
 
-class PostManagement {
+class PostManagement
+{
 
     const LOGTAIL_SOURCE = 'magento-bedbath-mx';
     const LOGTAIL_SOURCE_TOKEN = 'DB8ad3bQCZPAshmAEkj9hVLM';
@@ -85,8 +85,6 @@ class PostManagement {
 
     protected $orderRepository;
 
-    protected $deunaShipping;
-
     protected $orderManagement;
 
     public function __construct(
@@ -101,7 +99,6 @@ class PostManagement {
         CustomerRepositoryInterface $customerRepository,
         StoreManagerInterface $storeManager,
         OrderRepositoryInterface $orderRepository,
-        ShippingMethods $deunaShipping,
         OrderManagementInterface $orderManagement
     ) {
         $this->request = $request;
@@ -115,7 +112,6 @@ class PostManagement {
         $this->customerRepository = $customerRepository;
         $this->storeManager = $storeManager;
         $this->orderRepository = $orderRepository;
-        $this->deunaShipping = $deunaShipping;
         $this->orderManagement = $orderManagement;
         $this->logger = new Logger(self::LOGTAIL_SOURCE);
         $this->logger->pushHandler(new LogtailHandler(self::LOGTAIL_SOURCE_TOKEN));
@@ -141,8 +137,8 @@ class PostManagement {
             $paymentProcessor = $paymentData['processor'];
             $paymentMethod = $order['payment_method'];
             $userComment = $order['user_instructions'];
-            $shippingAmount = $order['shipping_amount']/100;
-            $totalAmount = $order['total_amount']/100;
+            $shippingAmount = $order['shipping_amount'] / 100;
+            $totalAmount = $order['total_amount'] / 100;
 
             $quote = $this->quotePrepare($order, $email);
 
@@ -159,11 +155,11 @@ class PostManagement {
                     'paymentMethod' => $paymentMethod,
                 ]);
 
-                if($paymentMethod!='cash') {
-                    if($payment_status!='processed' && $payment_status!='authorized')
+                if ($paymentMethod != 'cash') {
+                    if ($payment_status != 'processed' && $payment_status != 'authorized')
                         return;
 
-                    if($payment_status=='processed') {
+                    if ($payment_status == 'processed') {
                         $invoice_status = 2;
                     }
                 }
@@ -173,7 +169,7 @@ class PostManagement {
 
                 $this->logger->debug("Order created with status {$mgOrder->getState()}");
 
-                if(!empty($userComment)) {
+                if (!empty($userComment)) {
                     $mgOrder->addStatusHistoryComment(
                         "Comentario de cliente<br>
                         <i>{$userComment}</i>"
@@ -223,7 +219,7 @@ class PostManagement {
 
                 ObjectManager::getInstance()->create(CreateInvoice::class)->execute($mgOrder->getId(), $invoice_status);
 
-                if($paymentProcessor=='paypal_commerce') {
+                if ($paymentProcessor == 'paypal_commerce') {
                     $paypalChanged = $this->helper->savePaypalCode($payment->getId());
 
                     $this->logger->debug("Paypal code saved", [
@@ -246,7 +242,7 @@ class PostManagement {
 
                 return json_encode($output);
             }
-        } catch(Exception $e) {
+        } catch (Exception $e) {
             $err = [
                 'payload' => $bodyReq,
                 'message' => $e->getMessage(),
@@ -255,7 +251,7 @@ class PostManagement {
                 'trace' => $e->getTrace(),
             ];
 
-            $this->logger->error('Critical error in '.__CLASS__.'\\'.__FUNCTION__, $err);
+            $this->logger->error('Critical error in ' . __CLASS__ . '\\' . __FUNCTION__, $err);
 
             return [
                 "status" => 'failed',
@@ -284,14 +280,14 @@ class PostManagement {
         $paymentData = $order['payment']['data'];
         $processor = $paymentData['processor'];
 
-        if(isset($paymentData['authentication_method'])) {
-            if(!empty($paymentData['authentication_method']) && $processor=='evopayment')
+        if (isset($paymentData['authentication_method'])) {
+            if (!empty($paymentData['authentication_method']) && $processor == 'evopayment')
                 $processor = "{$processor}_3ds";
         }
 
-        $this->logger->debug("DEUNA Payment Method: {$this->mapPaymentMethod($processor)}");
+        $this->logger->debug("Payment Method: {$processor}");
 
-        $quote->getPayment()->setMethod($this->mapPaymentMethod($processor));
+        $quote->getPayment()->setMethod($processor);
 
         $quote->setCustomerFirstname($order['shipping_address']['first_name']);
         $quote->setCustomerLastname($order['shipping_address']['last_name']);
@@ -306,7 +302,7 @@ class PostManagement {
 
     private function setCustomer($order, $email)
     {
-        if(!empty($email)) {
+        if (!empty($email)) {
             $store = $this->storeManager->getStore();
             $websiteId = $store->getStoreId();
 
@@ -317,11 +313,11 @@ class PostManagement {
             if (!$customer->getId()) {
                 // If not avilable then create this customer
                 $customer->setWebsiteId($websiteId)
-                         ->setStore($store)
-                         ->setFirstname($order['shipping_address']['first_name'])
-                         ->setLastname($order['shipping_address']['last_name'])
-                         ->setEmail($email)
-                         ->setPassword($email);
+                    ->setStore($store)
+                    ->setFirstname($order['shipping_address']['first_name'])
+                    ->setLastname($order['shipping_address']['last_name'])
+                    ->setEmail($email)
+                    ->setPassword($email);
                 $customer->save();
             }
 
@@ -340,7 +336,7 @@ class PostManagement {
     {
         $tokenResponse = $this->orderTokens->getToken();
 
-        if(!empty($tokenResponse['error'])) {
+        if (!empty($tokenResponse['error'])) {
             return json_encode($tokenResponse);
         }
 
@@ -359,8 +355,8 @@ class PostManagement {
         if ($payment_status == 'processed') {
             $orderState = \Magento\Sales\Model\Order::STATE_PROCESSING;
             $order->setState($orderState)
-                  ->setStatus(\Magento\Sales\Model\Order::STATE_PROCESSING)
-                  ->setTotalPaid($totalAmount);
+                ->setStatus(\Magento\Sales\Model\Order::STATE_PROCESSING)
+                ->setTotalPaid($totalAmount);
 
             $this->logger->debug("Order ({$order->getIncrementId()}) status changed to PROCESSING");
 
@@ -368,7 +364,7 @@ class PostManagement {
         } elseif ($payment_status == 'authorized') {
             $orderState = \Magento\Sales\Model\Order::STATE_PENDING_PAYMENT;
             $order->setState($orderState)
-                  ->setStatus(\Magento\Sales\Model\Order::STATE_PENDING_PAYMENT);
+                ->setStatus(\Magento\Sales\Model\Order::STATE_PENDING_PAYMENT);
 
             $this->logger->debug("Order ({$order->getIncrementId()}) status changed to PENDING PAYMENT");
 
@@ -382,12 +378,12 @@ class PostManagement {
         $billingData = $data['billing_address'];
 
         //  Billing Address
-        $billingRegionId = $this->deunaShipping->getRegionId($billingData['state_name']);
+        $billingRegionId = $this->helper->getRegionId($billingData['state_name']);
 
         $billing_address = [
             'firstname' => $billingData['first_name'],
             'lastname' => $billingData['last_name'],
-            'street' => $billingData['address1'].', '.$billingData['address2'],
+            'street' => $billingData['address1'] . ', ' . $billingData['address2'],
             'city' => $billingData['city'],
             'country_id' => $billingData['country_code'],
             'region' => $billingRegionId,
@@ -398,12 +394,12 @@ class PostManagement {
         $quote->getBillingAddress()->addData($billing_address);
 
         // Shipping Address
-        $shippingRegionId = $this->deunaShipping->getRegionId($shippingData['state_name']);
+        $shippingRegionId = $this->helper->getRegionId($shippingData['state_name']);
 
         $shipping_address = [
             'firstname' => (empty($shippingData['first_name']) ? $billingData['first_name'] : $billingData['first_name']),
             'lastname' => (empty($shippingData['last_name']) ? $billingData['last_name'] : $billingData['last_name']),
-            'street' => (empty($shippingData['address1']) ? $billingData['address1'] : $shippingData['address1']).', '.(empty($shippingData['address2']) ? $billingData['address2'] : $shippingData['address2']),
+            'street' => (empty($shippingData['address1']) ? $billingData['address1'] : $shippingData['address1']) . ', ' . (empty($shippingData['address2']) ? $billingData['address2'] : $shippingData['address2']),
             'city' => (empty($shippingData['city']) ? $billingData['city'] : $shippingData['city']),
             'country_id' => (empty($shippingData['country_code']) ? $billingData['country_code'] : $shippingData['country_code']),
             'region' => (empty($shippingRegionId) ? $billingRegionId : $shippingRegionId),
@@ -504,7 +500,7 @@ class PostManagement {
         try {
             $deunaCaptureResponse = $this->captureDeuna($payment);
 
-            if($deunaCaptureResponse) {
+            if ($deunaCaptureResponse) {
                 $status = 'processed';
 
                 // Generate the transaction ID for the capture
@@ -536,7 +532,8 @@ class PostManagement {
                 $order->setState(\Magento\Sales\Model\Order::STATE_PROCESSING)
                     ->setStatus(\Magento\Sales\Model\Order::STATE_PROCESSING)
                     ->addStatusToHistory(
-                        \Magento\Sales\Model\Order::STATE_PROCESSING, __('Payment captured successfully.')
+                        \Magento\Sales\Model\Order::STATE_PROCESSING,
+                        __('Payment captured successfully.')
                     )->save();
 
                 return $deunaCaptureResponse;
@@ -568,7 +565,7 @@ class PostManagement {
 
         $transaction = $payment->addTransaction($txnType);
 
-        switch($type) {
+        switch ($type) {
             case 'approved':
                 $this->logger->debug('Transaction type: approved', [
                     'parentId' => $parentId,
@@ -610,33 +607,13 @@ class PostManagement {
         }
 
         $transaction->setAdditionalInformation(
-            \Magento\Sales\Model\Order\Payment\Transaction::RAW_DETAILS,$additionalInfo
+            \Magento\Sales\Model\Order\Payment\Transaction::RAW_DETAILS,
+            $additionalInfo
         );
 
         $transaction->save();
         $payment->save();
     }
 
-    public function mapPaymentMethod($paymentMethod) {
-        switch($paymentMethod) {
-            case 'adyen':
-                return 'adyen_cc';
-                break;
-            case 'evopayment':
-                return 'tns_hpf';
-                break;
-            case 'amex':
-                return 'amex_hpf';
-                break;
-            case 'evopayment_3ds':
-                return 'tns_hosted';
-                break;
-            case 'paypal_commerce':
-                return 'paypal_express_tmp';
-                break;
-            default:
-                return 'deunacheckout';
-                break;
-        }
-    }
+    
 }
