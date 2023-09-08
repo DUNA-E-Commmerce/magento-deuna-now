@@ -2,12 +2,9 @@
 
 namespace Deuna\Now\Model;
 
-use Magento\Framework\Event\ObserverInterface;
 use Magento\Checkout\Model\Session;
-use Magento\Shipping\Model\Config as shippingConfig;
 use Magento\Framework\HTTP\Adapter\Curl;
 use Magento\Framework\Exception\LocalizedException;
-use Laminas\Http\Request;
 use Magento\Framework\Serialize\Serializer\Json;
 use Deuna\Now\Helper\Data;
 use Exception;
@@ -15,7 +12,6 @@ use Magento\Store\Model\StoreManagerInterface;
 use Magento\Framework\Pricing\PriceCurrencyInterface;
 use Magento\Catalog\Model\Category;
 use Magento\Framework\Encryption\EncryptorInterface;
-use Magento\Quote\Api\ShippingMethodManagementInterface;
 use Magento\Customer\Api\AddressRepositoryInterface;
 use Magento\Quote\Api\Data\ShippingAssignmentInterface;
 use Magento\Quote\Model\QuoteIdMaskFactory;
@@ -30,13 +26,6 @@ use Magento\Framework\Exception\NoSuchEntityException;
 
 class OrderTokens
 {
-
-    const URL_PRODUCTION = 'https://apigw.getduna.com/merchants/orders';
-    const URL_STAGING = 'https://api.stg.deuna.io/merchants/orders';
-    const URL_DEVELOPMENT = 'https://api.stg.deuna.io/merchants/orders';
-    const CONTENT_TYPE = 'application/json';
-    const PRIVATE_KEY_PRODUCTION = 'private_key_prod';
-    const PRIVATE_KEY_STAGING = 'private_key_sandbox';
     const LOGTAIL_SOURCE = 'magento-bedbath-mx';
     const LOGTAIL_SOURCE_TOKEN = 'DB8ad3bQCZPAshmAEkj9hVLM';
 
@@ -46,18 +35,9 @@ class OrderTokens
     private $checkoutSession;
 
     /**
-     * @var Curl
-     */
-    private $curl;
-
-    /**
      * @var Json
      */
     private $json;
-    /**
-     * @var Observer
-     */
-    private $observer;
 
     /**
      * @var Data
@@ -68,20 +48,12 @@ class OrderTokens
      * @var StoreManagerInterface
      */
     private $storeManager;
-    /**
-     * @var ShippingAssignmentInterface
-     */
-    private $shippingAssignment;
-
-    /**
-     * @var ShippingMethodManagementInterface
-     */
-    private $shippingMethodManager;
 
     /**
      * @var PriceCurrencyInterface
      */
     private $priceCurrency;
+
     /**
      * @var AddressRepositoryInterface
      */
@@ -91,21 +63,7 @@ class OrderTokens
      * @var Category
      */
     private $category;
-    /**
-     * @var TotalsInformationInterface
-     */
-    private $totalsInformationInterface;
-    /**
-     * @var TotalsInformationManagementInterface
-     */
-    private $totalsInformationManagementInterface;
-    /**
-     * @var QuoteIdMaskFactory
-     */
-    private $quoteIdMaskFactory;
-
-    private $shippingMethodManagement;
-
+    
     private $coupon;
 
     private $saleRule;
@@ -171,60 +129,6 @@ class OrderTokens
     }
 
     /**
-     * @return string
-     */
-    private function getUrl(): string
-    {
-        $env = $this->getEnvironment();
-
-        switch($env) {
-            case 'develop':
-                return self::URL_DEVELOPMENT;
-                break;
-            case 'staging':
-                return self::URL_STAGING;
-                break;
-            default:
-                return self::URL_PRODUCTION;
-                break;
-        }
-    }
-
-    /**
-     * @return string
-     */
-    public function getPrivateKey(): string
-    {
-        $env = $this->getEnvironment();
-
-        /**
-         * Merchant Dev: MAGENTO
-         * Used for local development
-         */
-        $devPrivateKey = 'ab88c4b4866150ebbce7599c827d00f9f238c34e42baa095c9b0b6233e812ba54ef13d1b5ce512e7929eb4804b0218365c1071a35a85311ff3053c5e23a6';
-
-        if ($env == 'develop') {
-            return $devPrivateKey;
-        } else if ($env == 'staging') {
-            $privateKey = $this->helper->getGeneralConfig(self::PRIVATE_KEY_STAGING);
-        } else {
-            $privateKey = $this->helper->getGeneralConfig(self::PRIVATE_KEY_PRODUCTION);
-        }
-        return $privateKey;
-    }
-
-    /**
-     * @return string[]
-     */
-    private function getHeaders(): array
-    {
-        return [
-            'X-Api-Key: ' . $this->getPrivateKey(),
-            'Content-Type: ' . self::CONTENT_TYPE
-        ];
-    }
-
-    /**
      * @param $addressId
      *
      * @return \Magento\Customer\Api\Data\AddressInterface
@@ -267,77 +171,6 @@ class OrderTokens
         ]);
 
         return null;
-    }
-
-    /**
-     * @param $body
-     * @return mixed
-     * @throws LocalizedException
-     */
-    public function request($body)
-    {
-        $method = Request::METHOD_POST;
-        $url = $this->getUrl();
-        $http_ver = '1.1';
-        $headers = $this->getHeaders();
-
-        if($this->getEnvironment()!=='prod') {
-            $this->logger->debug("Environment", [
-                'environment' => $this->getEnvironment(),
-                'apikey' => $this->getPrivateKey(),
-                'request' => $url,
-                'body' => $body,
-            ]);
-        }
-        $configuration['header'] = false;
-
-        if($this->getEnvironment()!=='prod') {
-            $this->logger->debug('CURL Configuration sent', [
-                'config' => $configuration,
-            ]);
-        }
-
-        $this->curl->setConfig($configuration);
-        $this->curl->write($method, $url, $http_ver, $headers, $body);
-
-        $response = $this->curl->read();
-
-        if (!$response) {
-            $msg = "No response from request to {$url}";
-            $this->logger->warning($msg);
-            throw new LocalizedException(__($msg));
-        }
-
-        $response = $this->json->unserialize($response);
-
-        if($this->getEnvironment()!=='prod') {
-            $this->logger->debug("Response", [
-                'data' => $response,
-            ]);
-        }
-
-        if(!empty($response['error'])) {
-            $error = $response['error'];
-
-            $this->logger->debug('Error on DEUNA Token', [
-                'url' => $url,
-                'error' => $error,
-            ]);
-
-            return $response;
-
-            // throw new LocalizedException(__('Error returned with request to ' . $url . '. Code: ' . $error['code'] . ' Error: ' . $error['description']));
-        }
-
-        if (!empty($response['code'])) {
-            throw new LocalizedException(__('Error returned with request to ' . $url . '. Code: ' . $response['code'] . ' Error: ' . $response['message']));
-        }
-
-        $this->logger->debug('Token Response', [
-            'token' => $response,
-        ]);
-
-        return $response;
     }
 
     /**
@@ -518,14 +351,11 @@ class OrderTokens
      * @param $shippingAmount
      * @return array
      */
-    private function getShippingData($order, $quote, $storeObj)
+    private function getShippingData($order, $quote)
     {
-        $shippingOptions = $order['order']['shipping_options'];
-
         $shippingAddress = $quote->getShippingAddress();
 
         $shippingAmount = $this->priceFormat($shippingAddress->getShippingAmount());
-
 
         $address = $shippingAddress->getStreet();
 
@@ -604,6 +434,7 @@ class OrderTokens
         $order['order']['shipping_amount'] = $shippingAmount;
         $order['order']['sub_total'] += $shippingAmount;
         $order['order']['total_amount'] += $shippingAmount;
+
         return $order;
     }
 
@@ -615,7 +446,7 @@ class OrderTokens
     {
         $priceFix = number_format(is_null($price) ? 0 : $price, 2, '.', '');
 
-        return (int) round($priceFix * 100, 1 , PHP_ROUND_HALF_UP);;
+        return (int) round($priceFix * 100, 1 , PHP_ROUND_HALF_UP);
     }
 
     /**
@@ -673,9 +504,24 @@ class OrderTokens
             $quote = $this->checkoutSession->getQuote();
 
             $body = $this->json->serialize($this->getBody($quote));
+
             $body = json_encode($this->getBody($quote));
 
-            $response = $this->request($body);
+            $endpoint = '/merchants/orders'; 
+
+            $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+            $requestHelper = $objectManager->get(\Deuna\Now\Helper\RequestHelper::class);
+            
+
+            $response = $requestHelper->request($endpoint, 'POST', $body);
+            
+            list(, $response) = explode("\r\n\r\n", $response, 2);
+
+            $response = json_decode($response, true);
+
+            if ($response === null && json_last_error() !== JSON_ERROR_NONE) {
+                die('Error al decodificar JSON');
+            }
 
             if (!empty($response['error'])) {
                 $quote->setIsActive(false);
@@ -684,7 +530,8 @@ class OrderTokens
                 throw new LocalizedException(__($response['error']['description']));
             }
 
-            return $this->request($body);
+            return $response;
+
         } catch (Exception $e) {
 
             var_dump($e);die;
@@ -728,10 +575,6 @@ class OrderTokens
 
             return $err;
         }
-    }
-
-    public function getEnvironment() {
-        return $this->helper->getEnv();
     }
 
     private function getPaymentMethodList()
