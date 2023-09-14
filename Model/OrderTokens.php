@@ -2,26 +2,24 @@
 
 namespace Deuna\Now\Model;
 
-use Magento\Checkout\Model\Session;
-use Magento\Framework\HTTP\Adapter\Curl;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Serialize\Serializer\Json;
-use Deuna\Now\Helper\Data;
-use Exception;
-use Magento\Store\Model\StoreManagerInterface;
 use Magento\Framework\Pricing\PriceCurrencyInterface;
+use Magento\Framework\Serialize\Serializer\Json;
+use Magento\Checkout\Model\Session;
+use Magento\SalesRule\Model\Coupon;
+use Magento\SalesRule\Model\Rule;
+use Magento\Store\Model\StoreManagerInterface;
 use Magento\Catalog\Model\Category;
-use Magento\Framework\Encryption\EncryptorInterface;
 use Magento\Customer\Api\AddressRepositoryInterface;
-use Magento\Quote\Api\Data\ShippingAssignmentInterface;
-use Magento\Quote\Model\QuoteIdMaskFactory;
 use Magento\Checkout\Api\Data\TotalsInformationInterface;
 use Magento\Checkout\Api\TotalsInformationManagementInterface;
 use Magento\Catalog\Helper\Image;
 use Magento\Framework\App\ObjectManager;
 use Magento\Catalog\Api\ProductRepositoryInterface;
-use Deuna\Now\Helper\LogtailHelper as Logger;
 use Magento\Framework\Exception\NoSuchEntityException;
+use Deuna\Now\Helper\LogtailHelper as Logger;
+use Deuna\Now\Helper\Data;
+use Exception;
 
 class OrderTokens
 {
@@ -65,11 +63,6 @@ class OrderTokens
     private $saleRule;
 
     /**
-     * @var EncryptorInterface
-     */
-    protected $encryptor;
-
-    /**
      * @var Logger
      */
     private $logger;
@@ -81,42 +74,28 @@ class OrderTokens
 
     public function __construct(
         Session $checkoutSession,
-        Curl $curl,
         Json $json,
         Data $helper,
         StoreManagerInterface $storeManager,
         PriceCurrencyInterface $priceCurrency,
         Category $category,
-        EncryptorInterface $encryptor,
-        \Magento\SalesRule\Model\Coupon $coupon,
-        \Magento\SalesRule\Model\Rule $saleRule,
-        \Magento\Framework\Event\Observer $observer,
-        \Magento\Quote\Api\ShippingMethodManagementInterface $shippingMethodManagement,
-        \Magento\Quote\Model\ShippingMethodManagement $shippingMethodManager,
+        Coupon $coupon,
+        Rule $saleRule,
         AddressRepositoryInterface $addressRepository,
-        ShippingAssignmentInterface $shippingAssignment,
-        QuoteIdMaskFactory $quoteIdMaskFactory,
         TotalsInformationInterface $totalsInformationInterface,
         TotalsInformationManagementInterface $totalsInformationManagementInterface,
         Image $imageHelper,
         Logger $logger
     ) {
         $this->checkoutSession = $checkoutSession;
-        $this->curl = $curl;
         $this->json = $json;
         $this->helper = $helper;
         $this->storeManager = $storeManager;
         $this->priceCurrency = $priceCurrency;
         $this->category = $category;
-        $this->encryptor = $encryptor;
         $this->coupon = $coupon;
         $this->saleRule = $saleRule;
-        $this->observer = $observer;
-        $this->shippingMethodManagement = $shippingMethodManagement;
-        $this->shippingMethodManager = $shippingMethodManager;
         $this->addressRepository = $addressRepository;
-        $this->shippingAssignment = $shippingAssignment;
-        $this->quoteIdMaskFactory = $quoteIdMaskFactory;
         $this->totalsInformationInterface = $totalsInformationInterface;
         $this->totalsInformationManagementInterface = $totalsInformationManagementInterface;
         $this->imageHelper = $imageHelper;

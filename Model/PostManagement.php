@@ -6,7 +6,6 @@ use Magento\Framework\Webapi\Rest\Request;
 use Magento\Quote\Model\QuoteManagement;
 use Magento\Quote\Model\QuoteFactory as Quote;
 use Magento\Quote\Api\CartRepositoryInterface as CRI;
-use Exception;
 use Magento\Customer\Model\CustomerFactory;
 use Magento\Customer\Api\CustomerRepositoryInterface;
 use Magento\Framework\App\ObjectManager;
@@ -16,6 +15,7 @@ use Deuna\Now\Helper\Data;
 use Deuna\Now\Model\CreateInvoice;
 use Deuna\Now\Model\OrderTokens;
 use Deuna\Now\Helper\LogtailHelper as Logger;
+use Exception;
 
 class PostManagement
 {
@@ -33,7 +33,8 @@ class PostManagement
      *
      * @var string
      */
-    protected $_code = 'deunacheckout';
+    protected $_code = 'deuna';
+
     /**
      * @var Request
      */
@@ -50,18 +51,6 @@ class PostManagement
     private $orderTokens;
 
     /**
-     * @var \Magento\Quote\Api\CartRepositoryInterface
-     */
-    protected $quoteRepository;
-
-    /**
-     * @var \Magento\Quote\Model\QuoteFactory
-     */
-    protected $quoteFactory;
-
-    protected $quoteModel;
-
-    /**
      * @var CRI
      */
     protected $cri;
@@ -71,21 +60,30 @@ class PostManagement
      */
     protected $helper;
 
+    /**
+     * @var CustomerFactory
+     */
     protected $customerFactory;
 
+    /**
+     * @var CustomerRepositoryInterface
+     */
     protected $customerRepository;
 
+    /**
+     * @var StoreManagerInterface
+     */
     protected $storeManager;
 
+    /**
+     * @var OrderRepositoryInterface
+     */
     protected $orderRepository;
-
-    protected $orderManagement;
 
     public function __construct(
         Request $request,
         QuoteManagement $quoteManagement,
         OrderTokens $orderTokens,
-        Quote $quoteModel,
         CRI $cri,
         Data $helper,
         CustomerFactory $customerFactory,
@@ -97,7 +95,6 @@ class PostManagement
         $this->request = $request;
         $this->quoteManagement = $quoteManagement;
         $this->orderTokens = $orderTokens;
-        $this->quoteModel = $quoteModel;
         $this->cri = $cri;
         $this->helper = $helper;
         $this->customerFactory = $customerFactory;
