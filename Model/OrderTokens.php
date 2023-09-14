@@ -2,33 +2,27 @@
 
 namespace Deuna\Now\Model;
 
-use Magento\Checkout\Model\Session;
-use Magento\Framework\HTTP\Adapter\Curl;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Serialize\Serializer\Json;
-use Deuna\Now\Helper\Data;
-use Exception;
-use Magento\Store\Model\StoreManagerInterface;
 use Magento\Framework\Pricing\PriceCurrencyInterface;
+use Magento\Framework\Serialize\Serializer\Json;
+use Magento\Checkout\Model\Session;
+use Magento\SalesRule\Model\Coupon;
+use Magento\SalesRule\Model\Rule;
+use Magento\Store\Model\StoreManagerInterface;
 use Magento\Catalog\Model\Category;
-use Magento\Framework\Encryption\EncryptorInterface;
 use Magento\Customer\Api\AddressRepositoryInterface;
-use Magento\Quote\Api\Data\ShippingAssignmentInterface;
-use Magento\Quote\Model\QuoteIdMaskFactory;
 use Magento\Checkout\Api\Data\TotalsInformationInterface;
 use Magento\Checkout\Api\TotalsInformationManagementInterface;
 use Magento\Catalog\Helper\Image;
 use Magento\Framework\App\ObjectManager;
 use Magento\Catalog\Api\ProductRepositoryInterface;
-use Monolog\Logger;
-use Logtail\Monolog\LogtailHandler;
 use Magento\Framework\Exception\NoSuchEntityException;
+use Deuna\Now\Helper\LogtailHelper as Logger;
+use Deuna\Now\Helper\Data;
+use Exception;
 
 class OrderTokens
 {
-    const LOGTAIL_SOURCE = 'magento-bedbath-mx';
-    const LOGTAIL_SOURCE_TOKEN = 'DB8ad3bQCZPAshmAEkj9hVLM';
-
     /**
      * @var Session
      */
@@ -69,11 +63,6 @@ class OrderTokens
     private $saleRule;
 
     /**
-     * @var EncryptorInterface
-     */
-    protected $encryptor;
-
-    /**
      * @var Logger
      */
     private $logger;
@@ -85,46 +74,32 @@ class OrderTokens
 
     public function __construct(
         Session $checkoutSession,
-        Curl $curl,
         Json $json,
         Data $helper,
         StoreManagerInterface $storeManager,
         PriceCurrencyInterface $priceCurrency,
         Category $category,
-        EncryptorInterface $encryptor,
-        \Magento\SalesRule\Model\Coupon $coupon,
-        \Magento\SalesRule\Model\Rule $saleRule,
-        \Magento\Framework\Event\Observer $observer,
-        \Magento\Quote\Api\ShippingMethodManagementInterface $shippingMethodManagement,
-        \Magento\Quote\Model\ShippingMethodManagement $shippingMethodManager,
+        Coupon $coupon,
+        Rule $saleRule,
         AddressRepositoryInterface $addressRepository,
-        ShippingAssignmentInterface $shippingAssignment,
-        QuoteIdMaskFactory $quoteIdMaskFactory,
         TotalsInformationInterface $totalsInformationInterface,
         TotalsInformationManagementInterface $totalsInformationManagementInterface,
         Image $imageHelper,
+        Logger $logger
     ) {
         $this->checkoutSession = $checkoutSession;
-        $this->curl = $curl;
         $this->json = $json;
         $this->helper = $helper;
         $this->storeManager = $storeManager;
         $this->priceCurrency = $priceCurrency;
         $this->category = $category;
-        $this->encryptor = $encryptor;
         $this->coupon = $coupon;
         $this->saleRule = $saleRule;
-        $this->observer = $observer;
-        $this->shippingMethodManagement = $shippingMethodManagement;
-        $this->shippingMethodManager = $shippingMethodManager;
         $this->addressRepository = $addressRepository;
-        $this->shippingAssignment = $shippingAssignment;
-        $this->quoteIdMaskFactory = $quoteIdMaskFactory;
         $this->totalsInformationInterface = $totalsInformationInterface;
         $this->totalsInformationManagementInterface = $totalsInformationManagementInterface;
         $this->imageHelper = $imageHelper;
-        $this->logger = new Logger(self::LOGTAIL_SOURCE);
-        $this->logger->pushHandler(new LogtailHandler(self::LOGTAIL_SOURCE_TOKEN));
+        $this->logger = $logger;
         $this->imageHelper = $imageHelper;
     }
 
@@ -174,7 +149,10 @@ class OrderTokens
     }
 
     /**
-     * @return array
+     * Get the body of the request data for a quote.
+     *
+     * @param Quote $quote The quote for which the request data is being generated.
+     * @return array The request data body as an array.
      */
     public function getBody($quote): array
     {
@@ -243,8 +221,10 @@ class OrderTokens
     }
 
     /**
-     * @param $quote
-     * @return array|void
+     * Get discount information for the quote if a coupon code is applied.
+     *
+     * @param Quote $quote The quote for which to retrieve discount information.
+     * @return array|null An array containing discount details, or null if no coupon is applied.
      */
     private function getDiscounts($quote)
     {
@@ -288,8 +268,10 @@ class OrderTokens
     }
 
     /**
-     * @param $items
-     * @return array
+     * Retrieve an array of item details for the given quote.
+     *
+     * @param Quote $quote The quote for which to retrieve item details.
+     * @return array An array containing item details.
      */
     private function getItems($quote): array
     {
@@ -347,9 +329,11 @@ class OrderTokens
     }
 
     /**
-     * @param $order
-     * @param $shippingAmount
-     * @return array
+     * Retrieve shipping data for the order and quote.
+     *
+     * @param array $order The order data array.
+     * @param Quote $quote The quote for which to retrieve shipping data.
+     * @return array The updated order data array with shipping details.
      */
     private function getShippingData($order, $quote)
     {
@@ -439,8 +423,10 @@ class OrderTokens
     }
 
     /**
-     * @param $price
-     * @return int
+     * Format a price and convert it to an integer.
+     *
+     * @param float|null $price The price to format and convert (nullable).
+     * @return int The formatted and converted price as an integer.
      */
     public function priceFormat($price): int
     {
@@ -450,7 +436,9 @@ class OrderTokens
     }
 
     /**
-     * @return string
+     * Get the weight unit from configuration.
+     *
+     * @return string The weight unit (e.g., "lbs" or "kg").
      */
     private function getWeightUnit(): string
     {
@@ -458,9 +446,10 @@ class OrderTokens
     }
 
     /**
-     * @param $item
-     * @return string
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * Get the URL of the product image associated with the item.
+     *
+     * @param Item $item The item for which to retrieve the image URL.
+     * @return string The URL of the product image.
      */
     private function getImageUrl($item): string
     {
@@ -480,8 +469,10 @@ class OrderTokens
     }
 
     /**
-     * @param $item
-     * @return string
+     * Get the category name associated with the product item.
+     *
+     * @param Item $item The item for which to retrieve the category name.
+     * @return string The category name.
      */
     private function getCategory($item): string
     {
@@ -493,8 +484,9 @@ class OrderTokens
     }
 
     /**
-     * @return string
-     * @throws LocalizedException
+     * Tokenize and process a quote to create an order through an external API.
+     *
+     * @return array The response data from the external API.
      */
     private function tokenize(): array
     {
@@ -539,8 +531,9 @@ class OrderTokens
     }
 
     /**
-     * @return string
-     * @throws LocalizedException
+     * Generate a token for payment processing and log the process.
+     *
+     * @return array|string An array containing the generated token or an error message.
      */
     public function getToken()
     {
@@ -577,6 +570,11 @@ class OrderTokens
         }
     }
 
+    /**
+     * Retrieve and log the list of active payment methods in the Magento store.
+     *
+     * @return void
+     */
     private function getPaymentMethodList()
     {
         $objectManager = ObjectManager::getInstance();

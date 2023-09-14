@@ -5,22 +5,19 @@ namespace Deuna\Now\Observer;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Exception\LocalizedException;
-use Monolog\Logger;
-use Logtail\Monolog\LogtailHandler;
+use Deuna\Now\Helper\LogtailHelper as Logger;
 
 class RefundObserver implements ObserverInterface
 {
     /**
-     *  @var \Psr\Log\LoggerInterface $logger
+     * @var LogtailHelper
      */
-    const LOGTAIL_SOURCE = 'magento-bedbath-mx';
-    const LOGTAIL_SOURCE_TOKEN = 'DB8ad3bQCZPAshmAEkj9hVLM';
+    private $logger;
 
-    protected $logger;
-
-    public function __construct() {
-        $this->logger = new Logger(self::LOGTAIL_SOURCE);
-        $this->logger->pushHandler(new LogtailHandler(self::LOGTAIL_SOURCE_TOKEN));
+    public function __construct(
+        Logger $logger
+        ) {
+        $this->logger = $logger;
     }
 
     public function execute(Observer $observer)
