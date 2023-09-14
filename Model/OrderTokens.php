@@ -170,7 +170,10 @@ class OrderTokens
     }
 
     /**
-     * @return array
+     * Get the body of the request data for a quote.
+     *
+     * @param Quote $quote The quote for which the request data is being generated.
+     * @return array The request data body as an array.
      */
     public function getBody($quote): array
     {
@@ -239,8 +242,10 @@ class OrderTokens
     }
 
     /**
-     * @param $quote
-     * @return array|void
+     * Get discount information for the quote if a coupon code is applied.
+     *
+     * @param Quote $quote The quote for which to retrieve discount information.
+     * @return array|null An array containing discount details, or null if no coupon is applied.
      */
     private function getDiscounts($quote)
     {
@@ -284,8 +289,10 @@ class OrderTokens
     }
 
     /**
-     * @param $items
-     * @return array
+     * Retrieve an array of item details for the given quote.
+     *
+     * @param Quote $quote The quote for which to retrieve item details.
+     * @return array An array containing item details.
      */
     private function getItems($quote): array
     {
@@ -343,9 +350,11 @@ class OrderTokens
     }
 
     /**
-     * @param $order
-     * @param $shippingAmount
-     * @return array
+     * Retrieve shipping data for the order and quote.
+     *
+     * @param array $order The order data array.
+     * @param Quote $quote The quote for which to retrieve shipping data.
+     * @return array The updated order data array with shipping details.
      */
     private function getShippingData($order, $quote)
     {
@@ -435,8 +444,10 @@ class OrderTokens
     }
 
     /**
-     * @param $price
-     * @return int
+     * Format a price and convert it to an integer.
+     *
+     * @param float|null $price The price to format and convert (nullable).
+     * @return int The formatted and converted price as an integer.
      */
     public function priceFormat($price): int
     {
@@ -446,7 +457,9 @@ class OrderTokens
     }
 
     /**
-     * @return string
+     * Get the weight unit from configuration.
+     *
+     * @return string The weight unit (e.g., "lbs" or "kg").
      */
     private function getWeightUnit(): string
     {
@@ -454,9 +467,10 @@ class OrderTokens
     }
 
     /**
-     * @param $item
-     * @return string
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * Get the URL of the product image associated with the item.
+     *
+     * @param Item $item The item for which to retrieve the image URL.
+     * @return string The URL of the product image.
      */
     private function getImageUrl($item): string
     {
@@ -476,8 +490,10 @@ class OrderTokens
     }
 
     /**
-     * @param $item
-     * @return string
+     * Get the category name associated with the product item.
+     *
+     * @param Item $item The item for which to retrieve the category name.
+     * @return string The category name.
      */
     private function getCategory($item): string
     {
@@ -489,8 +505,9 @@ class OrderTokens
     }
 
     /**
-     * @return string
-     * @throws LocalizedException
+     * Tokenize and process a quote to create an order through an external API.
+     *
+     * @return array The response data from the external API.
      */
     private function tokenize(): array
     {
@@ -535,8 +552,9 @@ class OrderTokens
     }
 
     /**
-     * @return string
-     * @throws LocalizedException
+     * Generate a token for payment processing and log the process.
+     *
+     * @return array|string An array containing the generated token or an error message.
      */
     public function getToken()
     {
@@ -573,6 +591,11 @@ class OrderTokens
         }
     }
 
+    /**
+     * Retrieve and log the list of active payment methods in the Magento store.
+     *
+     * @return void
+     */
     private function getPaymentMethodList()
     {
         $objectManager = ObjectManager::getInstance();

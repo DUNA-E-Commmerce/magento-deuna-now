@@ -108,7 +108,9 @@ class PostManagement
     }
 
     /**
-     * @return false|string
+     * Handle order notification from an external payment processor.
+     *
+     * @return string JSON-encoded response indicating the status of the notification.
      */
     public function notify()
     {
@@ -255,11 +257,11 @@ class PostManagement
     }
 
     /**
-     * Quote Prepare
+     * Prepare a quote object for order processing.
      *
-     * @param $order
-     * @return \Magento\Quote\Api\Data\CartInterface
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @param array $order The order data.
+     * @param string $email The customer's email address.
+     * @return Quote The prepared quote object.
      */
     private function quotePrepare($order, $email)
     {
@@ -290,6 +292,13 @@ class PostManagement
         return $quote;
     }
 
+    /**
+     * Set or create a customer based on the provided email address.
+     *
+     * @param array $order The order data.
+     * @param string $email The customer's email address.
+     * @return Customer|null The customer object if created or found, or null if email is empty.
+     */
     private function setCustomer($order, $email)
     {
         if (!empty($email)) {
@@ -320,7 +329,9 @@ class PostManagement
     }
 
     /**
-     * @return false|string
+     * Generate and return a token for order processing.
+     *
+     * @return string JSON-encoded response containing the order token or an error message.
      */
     public function getToken()
     {
@@ -338,6 +349,14 @@ class PostManagement
         return json_encode($json);
     }
 
+    /**
+     * Update the payment state and status of an order based on the payment status.
+     *
+     * @param Order $order The order to update.
+     * @param string $payment_status The payment status ('processed' or 'authorized').
+     * @param float $totalAmount The total amount paid.
+     * @return void
+     */
     public function updatePaymentState($order, $payment_status, $totalAmount)
     {
         $payment = $order->getPayment();
@@ -362,6 +381,13 @@ class PostManagement
         }
     }
 
+    /**
+     * Update the billing and shipping addresses of a quote with provided address data.
+     *
+     * @param Quote $quote The quote to update.
+     * @param array $data The address data containing shipping and billing information.
+     * @return void
+     */
     public function updateAddresses($quote, $data)
     {
         $shippingData = $data['shipping_address'];
@@ -400,6 +426,12 @@ class PostManagement
         $quote->getShippingAddress()->addData($shipping_address);
     }
 
+    /**
+     * Check if a given status is considered a successful payment status.
+     *
+     * @param string $status The payment status to check.
+     * @return bool True if the status is successful, false otherwise.
+     */
     public function isSuccessStatus($status)
     {
         switch ($status) {
@@ -415,7 +447,10 @@ class PostManagement
     }
 
     /**
-     * Capture Transaction
+     * Capture a payment transaction for a given order.
+     *
+     * @param int $orderId The ID of the order to capture the transaction for.
+     * @return array|string An array containing capture information or an error message if capture fails.
      */
     public function captureTransaction($orderId)
     {
@@ -447,6 +482,12 @@ class PostManagement
         }
     }
 
+    /**
+     * Capture a payment transaction with the Deuna payment processor.
+     *
+     * @param Payment $payment The payment object.
+     * @return string The response from the capture request.
+     */
     public function captureDeuna($payment)
     {
 
@@ -472,10 +513,12 @@ class PostManagement
     }
 
     /**
-     * Capture Payment
+     * Capture a payment for the given amount using the Deuna payment processor.
      *
-     * @param \Magento\Payment\Model\InfoInterface $payment Payment object
-     * @param $amount Amount to capture
+     * @param Payment $payment The payment object.
+     * @param float $amount The amount to capture.
+     * @return array|string The response from the capture request or an error message.
+     * @throws \Magento\Framework\Exception\LocalizedException If the amount is invalid.
      */
     public function capturePayment($payment, $amount)
     {
@@ -542,6 +585,15 @@ class PostManagement
         }
     }
 
+    /**
+     * Create and save a new transaction for the payment.
+     *
+     * @param Payment $payment The payment object.
+     * @param string $type The type of transaction (e.g., 'approved', 'auth', 'capture').
+     * @param string|null $parentId The parent transaction ID for related transactions (only for 'capture').
+     * @param float $amount The transaction amount (only for 'capture').
+     * @param array $additionalInfo Additional information to store with the transaction.
+     */
     public function createTransaction($payment, $type = 'approved', $parentId = null, $amount = 0, $additionalInfo = [])
     {
         $txnId = "{$type}-{$payment->getId()}";
