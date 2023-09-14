@@ -15,14 +15,10 @@ use Magento\Store\Model\StoreManagerInterface;
 use Deuna\Now\Helper\Data;
 use Deuna\Now\Model\CreateInvoice;
 use Deuna\Now\Model\OrderTokens;
-use Monolog\Logger;
-use Logtail\Monolog\LogtailHandler;
+use Deuna\Now\Helper\LogtailHelper as Logger;
 
 class PostManagement
 {
-
-    const LOGTAIL_SOURCE = 'magento-bedbath-mx';
-    const LOGTAIL_SOURCE_TOKEN = 'DB8ad3bQCZPAshmAEkj9hVLM';
     const TRANSACTION_TYPES = [
         'approved' => \Magento\Sales\Model\Order\Payment\Transaction::TYPE_CAPTURE,
         'auth' => \Magento\Sales\Model\Order\Payment\Transaction::TYPE_AUTH,
@@ -96,6 +92,7 @@ class PostManagement
         CustomerRepositoryInterface $customerRepository,
         StoreManagerInterface $storeManager,
         OrderRepositoryInterface $orderRepository,
+        Logger $logger
     ) {
         $this->request = $request;
         $this->quoteManagement = $quoteManagement;
@@ -107,8 +104,7 @@ class PostManagement
         $this->customerRepository = $customerRepository;
         $this->storeManager = $storeManager;
         $this->orderRepository = $orderRepository;
-        $this->logger = new Logger(self::LOGTAIL_SOURCE);
-        $this->logger->pushHandler(new LogtailHandler(self::LOGTAIL_SOURCE_TOKEN));
+        $this->logger = $logger;
     }
 
     /**
@@ -230,7 +226,7 @@ class PostManagement
                     'data' => 'Quote is not active',
                 ];
 
-                $this->logger->warning("Pedido ({$orderId}) no se pudo notificar", [
+                $this->logger->warn("Pedido ({$orderId}) no se pudo notificar", [
                     'data' => $output,
                 ]);
 
@@ -483,9 +479,6 @@ class PostManagement
      */
     public function capturePayment($payment, $amount)
     {
-        $this->logger = new Logger(self::LOGTAIL_SOURCE);
-        $this->logger->pushHandler(new LogtailHandler(self::LOGTAIL_SOURCE_TOKEN));
-
         if ($amount <= 0) {
             $this->logger->error('Invalid amount for capture.');
             throw new \Magento\Framework\Exception\LocalizedException(__('Invalid amount for capture.'));
@@ -608,6 +601,5 @@ class PostManagement
         $transaction->save();
         $payment->save();
     }
-
     
 }

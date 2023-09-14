@@ -20,15 +20,11 @@ use Magento\Checkout\Api\TotalsInformationManagementInterface;
 use Magento\Catalog\Helper\Image;
 use Magento\Framework\App\ObjectManager;
 use Magento\Catalog\Api\ProductRepositoryInterface;
-use Monolog\Logger;
-use Logtail\Monolog\LogtailHandler;
+use Deuna\Now\Helper\LogtailHelper as Logger;
 use Magento\Framework\Exception\NoSuchEntityException;
 
 class OrderTokens
 {
-    const LOGTAIL_SOURCE = 'magento-bedbath-mx';
-    const LOGTAIL_SOURCE_TOKEN = 'DB8ad3bQCZPAshmAEkj9hVLM';
-
     /**
      * @var Session
      */
@@ -103,6 +99,7 @@ class OrderTokens
         TotalsInformationInterface $totalsInformationInterface,
         TotalsInformationManagementInterface $totalsInformationManagementInterface,
         Image $imageHelper,
+        Logger $logger
     ) {
         $this->checkoutSession = $checkoutSession;
         $this->curl = $curl;
@@ -123,8 +120,7 @@ class OrderTokens
         $this->totalsInformationInterface = $totalsInformationInterface;
         $this->totalsInformationManagementInterface = $totalsInformationManagementInterface;
         $this->imageHelper = $imageHelper;
-        $this->logger = new Logger(self::LOGTAIL_SOURCE);
-        $this->logger->pushHandler(new LogtailHandler(self::LOGTAIL_SOURCE_TOKEN));
+        $this->logger = $logger;
         $this->imageHelper = $imageHelper;
     }
 
