@@ -4,7 +4,6 @@ namespace Deuna\Now\Model;
 
 use Magento\Framework\Webapi\Rest\Request;
 use Magento\Quote\Model\QuoteManagement;
-use Magento\Quote\Model\QuoteFactory;
 use Magento\Quote\Model\QuoteFactory as Quote;
 use Magento\Quote\Api\CartRepositoryInterface as CRI;
 use Exception;
@@ -18,7 +17,6 @@ use Deuna\Now\Model\CreateInvoice;
 use Deuna\Now\Model\OrderTokens;
 use Monolog\Logger;
 use Logtail\Monolog\LogtailHandler;
-use Magento\Sales\Api\OrderManagementInterface;
 
 class PostManagement
 {
@@ -90,7 +88,6 @@ class PostManagement
     public function __construct(
         Request $request,
         QuoteManagement $quoteManagement,
-        QuoteFactory $quoteFactory,
         OrderTokens $orderTokens,
         Quote $quoteModel,
         CRI $cri,
@@ -99,11 +96,9 @@ class PostManagement
         CustomerRepositoryInterface $customerRepository,
         StoreManagerInterface $storeManager,
         OrderRepositoryInterface $orderRepository,
-        OrderManagementInterface $orderManagement
     ) {
         $this->request = $request;
         $this->quoteManagement = $quoteManagement;
-        $this->quoteFactory = $quoteFactory;
         $this->orderTokens = $orderTokens;
         $this->quoteModel = $quoteModel;
         $this->cri = $cri;
@@ -112,7 +107,6 @@ class PostManagement
         $this->customerRepository = $customerRepository;
         $this->storeManager = $storeManager;
         $this->orderRepository = $orderRepository;
-        $this->orderManagement = $orderManagement;
         $this->logger = new Logger(self::LOGTAIL_SOURCE);
         $this->logger->pushHandler(new LogtailHandler(self::LOGTAIL_SOURCE_TOKEN));
     }
