@@ -29,6 +29,13 @@ class CreateInvoice
         $this->invoiceSender = $invoiceSender;
     }
 
+    /**
+     * Execute the invoice creation process for a given order.
+     *
+     * @param int $orderId The ID of the order to invoice.
+     * @param string $state The state to set for the invoice (default is self::STATE_OPEN).
+     * @return void
+     */
     public function execute($orderId, $state = self::STATE_OPEN)
     {
         $order = $this->orderRepository->get($orderId);
