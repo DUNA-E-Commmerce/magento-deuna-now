@@ -7,7 +7,7 @@
                 <payment_action>true</payment_action> <!-- You can use another method like authorize,capture etc.  -->
                 <model>Deuna\Now\Model\PaymentMethod</model>
                 <active>1</active>
-                <title>DEUNA Now</title>
+                <title>Tarjeta de Crédito / Débito</title>
                 <order_status>pending_payment</order_status> <!-- Set your default order status -->
             </deuna>
         </payment>
