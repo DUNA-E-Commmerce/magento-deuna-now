@@ -269,14 +269,28 @@ class PostManagement
         $paymentData = $order['payment']['data'];
         $processor = $paymentData['processor'];
 
+        $this->logger->debug("Payment Method: {$processor}");
+
+
         if (isset($paymentData['authentication_method'])) {
             if (!empty($paymentData['authentication_method']) && $processor == 'evopayment')
                 $processor = "{$processor}_3ds";
         }
 
-        $this->logger->debug("Payment Method: {$processor}");
+        $this->logger->debug("Payment Method: {$processor}", $paymentData);
 
-        $quote->getPayment()->setMethod($processor);
+        $payment = $quote->getPayment();
+
+        $payment->setMethod('deuna');
+        $payment->setAdditionalInformation('payment_name', 'Deuna');
+        $payment->setAdditionalInformation('processor', $processor);
+        $payment->setAdditionalInformation('status', $paymentData['status']);
+        $payment->setAdditionalInformation('method_type', $paymentData['method_type']);
+        $payment->setAdditionalInformation('card_brand', $paymentData['from_card']['card_brand']);
+        $payment->setAdditionalInformation('card_holder', $paymentData['from_card']['card_holder']);
+        $payment->setAdditionalInformation('first_six', $paymentData['from_card']['first_six']);
+        $payment->setAdditionalInformation('last_four', $paymentData['from_card']['last_four']);
+        $payment->save();
 
         $quote->setCustomerFirstname($order['shipping_address']['first_name']);
         $quote->setCustomerLastname($order['shipping_address']['last_name']);
