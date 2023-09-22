@@ -2,62 +2,36 @@
 
 namespace Deuna\Now\Model;
 
-use Magento\Framework\Event\ObserverInterface;
-use Magento\Checkout\Model\Session;
-use Magento\Shipping\Model\Config as shippingConfig;
-use Magento\Framework\HTTP\Adapter\Curl;
 use Magento\Framework\Exception\LocalizedException;
-use Laminas\Http\Request;
-use Magento\Framework\Serialize\Serializer\Json;
-use Deuna\Now\Helper\Data;
-use Exception;
-use Magento\Store\Model\StoreManagerInterface;
 use Magento\Framework\Pricing\PriceCurrencyInterface;
+use Magento\Framework\Serialize\Serializer\Json;
+use Magento\Checkout\Model\Session;
+use Magento\SalesRule\Model\Coupon;
+use Magento\SalesRule\Model\Rule;
+use Magento\Store\Model\StoreManagerInterface;
 use Magento\Catalog\Model\Category;
-use Magento\Framework\Encryption\EncryptorInterface;
-use Magento\Quote\Api\ShippingMethodManagementInterface;
 use Magento\Customer\Api\AddressRepositoryInterface;
-use Magento\Quote\Api\Data\ShippingAssignmentInterface;
-use Magento\Quote\Model\QuoteIdMaskFactory;
 use Magento\Checkout\Api\Data\TotalsInformationInterface;
 use Magento\Checkout\Api\TotalsInformationManagementInterface;
 use Magento\Catalog\Helper\Image;
 use Magento\Framework\App\ObjectManager;
 use Magento\Catalog\Api\ProductRepositoryInterface;
-use Monolog\Logger;
-use Logtail\Monolog\LogtailHandler;
 use Magento\Framework\Exception\NoSuchEntityException;
+use Deuna\Now\Helper\LogtailHelper as Logger;
+use Deuna\Now\Helper\Data;
+use Exception;
 
 class OrderTokens
 {
-
-    const URL_PRODUCTION = 'https://apigw.getduna.com/merchants/orders';
-    const URL_STAGING = 'https://api.stg.deuna.io/merchants/orders';
-    const URL_DEVELOPMENT = 'https://api.stg.deuna.io/merchants/orders';
-    const CONTENT_TYPE = 'application/json';
-    const PRIVATE_KEY_PRODUCTION = 'private_key_prod';
-    const PRIVATE_KEY_STAGING = 'public_key_sandbox';
-    const LOGTAIL_SOURCE = 'magento-bedbath-mx';
-    const LOGTAIL_SOURCE_TOKEN = 'DB8ad3bQCZPAshmAEkj9hVLM';
-
     /**
      * @var Session
      */
     private $checkoutSession;
 
     /**
-     * @var Curl
-     */
-    private $curl;
-
-    /**
      * @var Json
      */
     private $json;
-    /**
-     * @var Observer
-     */
-    private $observer;
 
     /**
      * @var Data
@@ -68,20 +42,12 @@ class OrderTokens
      * @var StoreManagerInterface
      */
     private $storeManager;
-    /**
-     * @var ShippingAssignmentInterface
-     */
-    private $shippingAssignment;
-
-    /**
-     * @var ShippingMethodManagementInterface
-     */
-    private $shippingMethodManager;
 
     /**
      * @var PriceCurrencyInterface
      */
     private $priceCurrency;
+
     /**
      * @var AddressRepositoryInterface
      */
@@ -91,23 +57,10 @@ class OrderTokens
      * @var Category
      */
     private $category;
-    /**
-     * @var TotalsInformationInterface
-     */
-    private $totalsInformationInterface;
-    /**
-     * @var TotalsInformationManagementInterface
-     */
-    private $totalsInformationManagementInterface;
-    /**
-     * @var QuoteIdMaskFactory
-     */
-    private $quoteIdMaskFactory;
+    
+    private $coupon;
 
-    /**
-     * @var EncryptorInterface
-     */
-    protected $encryptor;
+    private $saleRule;
 
     /**
      * @var Logger
@@ -121,101 +74,33 @@ class OrderTokens
 
     public function __construct(
         Session $checkoutSession,
-        Curl $curl,
         Json $json,
         Data $helper,
         StoreManagerInterface $storeManager,
         PriceCurrencyInterface $priceCurrency,
         Category $category,
-        EncryptorInterface $encryptor,
-        \Magento\SalesRule\Model\Coupon $coupon,
-        \Magento\SalesRule\Model\Rule $saleRule,
-        \Magento\Framework\Event\Observer $observer,
-        \Magento\Quote\Api\ShippingMethodManagementInterface $shippingMethodManagement,
-        \Magento\Quote\Model\ShippingMethodManagement $shippingMethodManager,
+        Coupon $coupon,
+        Rule $saleRule,
         AddressRepositoryInterface $addressRepository,
-        ShippingAssignmentInterface $shippingAssignment,
-        QuoteIdMaskFactory $quoteIdMaskFactory,
         TotalsInformationInterface $totalsInformationInterface,
         TotalsInformationManagementInterface $totalsInformationManagementInterface,
         Image $imageHelper,
+        Logger $logger
     ) {
         $this->checkoutSession = $checkoutSession;
-        $this->curl = $curl;
         $this->json = $json;
         $this->helper = $helper;
         $this->storeManager = $storeManager;
         $this->priceCurrency = $priceCurrency;
         $this->category = $category;
-        $this->encryptor = $encryptor;
         $this->coupon = $coupon;
         $this->saleRule = $saleRule;
-        $this->observer = $observer;
-        $this->shippingMethodManagement = $shippingMethodManagement;
-        $this->shippingMethodManager = $shippingMethodManager;
         $this->addressRepository = $addressRepository;
-        $this->shippingAssignment = $shippingAssignment;
-        $this->quoteIdMaskFactory = $quoteIdMaskFactory;
         $this->totalsInformationInterface = $totalsInformationInterface;
         $this->totalsInformationManagementInterface = $totalsInformationManagementInterface;
         $this->imageHelper = $imageHelper;
-        $this->logger = new Logger(self::LOGTAIL_SOURCE);
-        $this->logger->pushHandler(new LogtailHandler(self::LOGTAIL_SOURCE_TOKEN));
+        $this->logger = $logger;
         $this->imageHelper = $imageHelper;
-    }
-
-    /**
-     * @return string
-     */
-    private function getUrl(): string
-    {
-        $env = $this->getEnvironment();
-
-        switch($env) {
-            case 'develop':
-                return self::URL_DEVELOPMENT;
-                break;
-            case 'staging':
-                return self::URL_STAGING;
-                break;
-            default:
-                return self::URL_PRODUCTION;
-                break;
-        }
-    }
-
-    /**
-     * @return string
-     */
-    public function getPrivateKey(): string
-    {
-        $env = $this->getEnvironment();
-
-        /**
-         * Merchant Dev: MAGENTO
-         * Used for local development
-         */
-        $devPrivateKey = 'ab88c4b4866150ebbce7599c827d00f9f238c34e42baa095c9b0b6233e812ba54ef13d1b5ce512e7929eb4804b0218365c1071a35a85311ff3053c5e23a6';
-
-        if ($env == 'develop') {
-            return $devPrivateKey;
-        } else if ($env == 'staging') {
-            $privateKey = $this->helper->getGeneralConfig(self::PRIVATE_KEY_STAGING);
-        } else {
-            $privateKey = $this->helper->getGeneralConfig(self::PRIVATE_KEY_PRODUCTION);
-        }
-        return $privateKey;
-    }
-
-    /**
-     * @return string[]
-     */
-    private function getHeaders(): array
-    {
-        return [
-            'X-Api-Key: ' . $this->getPrivateKey(),
-            'Content-Type: ' . self::CONTENT_TYPE
-        ];
     }
 
     /**
@@ -264,78 +149,10 @@ class OrderTokens
     }
 
     /**
-     * @param $body
-     * @return mixed
-     * @throws LocalizedException
-     */
-    public function request($body)
-    {
-        $method = Request::METHOD_POST;
-        $url = $this->getUrl();
-        $http_ver = '1.1';
-        $headers = $this->getHeaders();
-
-        if($this->getEnvironment()!=='prod') {
-            $this->logger->debug("Environment", [
-                'environment' => $this->getEnvironment(),
-                'apikey' => $this->getPrivateKey(),
-                'request' => $url,
-                'body' => $body,
-            ]);
-        }
-        $configuration['header'] = false;
-
-        if($this->getEnvironment()!=='prod') {
-            $this->logger->debug('CURL Configuration sent', [
-                'config' => $configuration,
-            ]);
-        }
-
-        $this->curl->setConfig($configuration);
-        $this->curl->write($method, $url, $http_ver, $headers, $body);
-
-        $response = $this->curl->read();
-
-        if (!$response) {
-            $msg = "No response from request to {$url}";
-            $this->logger->warning($msg);
-            throw new LocalizedException(__($msg));
-        }
-        
-        $response = $this->json->unserialize($response);
-
-        if($this->getEnvironment()!=='prod') {
-            $this->logger->debug("Response", [
-                'data' => $response,
-            ]);
-        }
-
-        if(!empty($response['error'])) {
-            $error = $response['error'];
-
-            $this->logger->debug('Error on DEUNA Token', [
-                'url' => $url,
-                'error' => $error,
-            ]);
-            
-            return $response;
-
-            // throw new LocalizedException(__('Error returned with request to ' . $url . '. Code: ' . $error['code'] . ' Error: ' . $error['description']));
-        }
-
-        if (!empty($response['code'])) {
-            throw new LocalizedException(__('Error returned with request to ' . $url . '. Code: ' . $response['code'] . ' Error: ' . $response['message']));
-        }
-
-        $this->logger->debug('Token Response', [
-            'token' => $response,
-        ]);
-
-        return $response;
-    }
-
-    /**
-     * @return array
+     * Get the body of the request data for a quote.
+     *
+     * @param Quote $quote The quote for which the request data is being generated.
+     * @return array The request data body as an array.
      */
     public function getBody($quote): array
     {
@@ -396,21 +213,18 @@ class OrderTokens
                 'redirect_url' => $domain . 'checkout/onepage/success',
                 'webhook_urls' => [
                     'notify_order' => $domain . 'rest/V1/orders/notify',
-                    'apply_coupon' => $domain . 'duna/set/coupon/order/{order_id}',
-                    'remove_coupon' => $domain . 'duna/remove/coupon/order/{order_id}/coupon/{coupon_code}',
-                    'get_shipping_methods' => $domain . 'rest/V1/orders/{order_id}/shipping-methods',
                     'shipping_rate' => '',
-                    'update_shipping_method' => $domain . 'duna/set/shippingmethod/order/{order_id}/method'
                 ]
             ]
         ];
-      
        return $this->getShippingData($body, $quote, $stores);
     }
 
     /**
-     * @param $quote
-     * @return array|void
+     * Get discount information for the quote if a coupon code is applied.
+     *
+     * @param Quote $quote The quote for which to retrieve discount information.
+     * @return array|null An array containing discount details, or null if no coupon is applied.
      */
     private function getDiscounts($quote)
     {
@@ -454,8 +268,10 @@ class OrderTokens
     }
 
     /**
-     * @param $items
-     * @return array
+     * Retrieve an array of item details for the given quote.
+     *
+     * @param Quote $quote The quote for which to retrieve item details.
+     * @return array An array containing item details.
      */
     private function getItems($quote): array
     {
@@ -513,18 +329,17 @@ class OrderTokens
     }
 
     /**
-     * @param $order
-     * @param $shippingAmount
-     * @return array
+     * Retrieve shipping data for the order and quote.
+     *
+     * @param array $order The order data array.
+     * @param Quote $quote The quote for which to retrieve shipping data.
+     * @return array The updated order data array with shipping details.
      */
-    private function getShippingData($order, $quote, $storeObj)
+    private function getShippingData($order, $quote)
     {
-        $shippingOptions = $order['order']['shipping_options'];
-        
         $shippingAddress = $quote->getShippingAddress();
 
         $shippingAmount = $this->priceFormat($shippingAddress->getShippingAmount());
-
 
         $address = $shippingAddress->getStreet();
 
@@ -608,18 +423,22 @@ class OrderTokens
     }
 
     /**
-     * @param $price
-     * @return int
+     * Format a price and convert it to an integer.
+     *
+     * @param float|null $price The price to format and convert (nullable).
+     * @return int The formatted and converted price as an integer.
      */
     public function priceFormat($price): int
     {
         $priceFix = number_format(is_null($price) ? 0 : $price, 2, '.', '');
 
-        return (int) round($priceFix * 100, 1 , PHP_ROUND_HALF_UP);;
+        return (int) round($priceFix * 100, 1 , PHP_ROUND_HALF_UP);
     }
 
     /**
-     * @return string
+     * Get the weight unit from configuration.
+     *
+     * @return string The weight unit (e.g., "lbs" or "kg").
      */
     private function getWeightUnit(): string
     {
@@ -627,9 +446,10 @@ class OrderTokens
     }
 
     /**
-     * @param $item
-     * @return string
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * Get the URL of the product image associated with the item.
+     *
+     * @param Item $item The item for which to retrieve the image URL.
+     * @return string The URL of the product image.
      */
     private function getImageUrl($item): string
     {
@@ -649,8 +469,10 @@ class OrderTokens
     }
 
     /**
-     * @param $item
-     * @return string
+     * Get the category name associated with the product item.
+     *
+     * @param Item $item The item for which to retrieve the category name.
+     * @return string The category name.
      */
     private function getCategory($item): string
     {
@@ -662,8 +484,9 @@ class OrderTokens
     }
 
     /**
-     * @return string
-     * @throws LocalizedException
+     * Tokenize and process a quote to create an order through an external API.
+     *
+     * @return array The response data from the external API.
      */
     private function tokenize(): array
     {
@@ -673,9 +496,24 @@ class OrderTokens
             $quote = $this->checkoutSession->getQuote();
 
             $body = $this->json->serialize($this->getBody($quote));
+
             $body = json_encode($this->getBody($quote));
 
-            $response = $this->request($body);
+            $endpoint = '/merchants/orders'; 
+
+            $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+            $requestHelper = $objectManager->get(\Deuna\Now\Helper\RequestHelper::class);
+            
+
+            $response = $requestHelper->request($endpoint, 'POST', $body);
+            
+            list(, $response) = explode("\r\n\r\n", $response, 2);
+
+            $response = json_decode($response, true);
+
+            if ($response === null && json_last_error() !== JSON_ERROR_NONE) {
+                die('Error al decodificar JSON');
+            }
 
             if (!empty($response['error'])) {
                 $quote->setIsActive(false);
@@ -684,7 +522,8 @@ class OrderTokens
                 throw new LocalizedException(__($response['error']['description']));
             }
 
-            return $this->request($body);
+            return $response;
+
         } catch (Exception $e) {
 
             var_dump($e);die;
@@ -692,8 +531,9 @@ class OrderTokens
     }
 
     /**
-     * @return string
-     * @throws LocalizedException
+     * Generate a token for payment processing and log the process.
+     *
+     * @return array|string An array containing the generated token or an error message.
      */
     public function getToken()
     {
@@ -730,10 +570,11 @@ class OrderTokens
         }
     }
 
-    public function getEnvironment() {
-        return $this->helper->getEnv();
-    }
-
+    /**
+     * Retrieve and log the list of active payment methods in the Magento store.
+     *
+     * @return void
+     */
     private function getPaymentMethodList()
     {
         $objectManager = ObjectManager::getInstance();
@@ -755,8 +596,4 @@ class OrderTokens
         $this->logger->debug('Payment Method List', $output);
     }
 
-    private function replace_null($value, $replace) {
-        if (is_null($value)) return $replace;
-        return $value;
-    }
 }

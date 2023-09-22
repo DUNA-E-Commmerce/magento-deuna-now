@@ -4,29 +4,22 @@ namespace Deuna\Now\Helper;
 
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Encryption\EncryptorInterface;
-use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Framework\HTTP\Adapter\Curl;
-use Monolog\Logger;
-use Logtail\Monolog\LogtailHandler;
+use Deuna\Now\Helper\LogtailHelper as Logger;
 use Deuna\Now\Helper\Data;
 use Laminas\Http\Request;
+use Magento\Framework\App\Helper\AbstractHelper;
+use Magento\Framework\App\Helper\Context;
 
-class RequestHelper extends \Magento\Framework\App\Helper\AbstractHelper
+class RequestHelper extends AbstractHelper
 {
     const URL_PRODUCTION = 'https://apigw.getduna.com';
     const URL_STAGING = 'https://api.stg.deuna.io';
     const URL_DEVELOPMENT = 'https://api.dev.deuna.io';
     const CONTENT_TYPE = 'application/json';
     const PRIVATE_KEY_PRODUCTION = 'private_key_prod';
-    const PRIVATE_KEY_STAGING = 'public_key_sandbox';
-    const LOGTAIL_SOURCE = 'magento-bedbath-mx';
-    const LOGTAIL_SOURCE_TOKEN = 'DB8ad3bQCZPAshmAEkj9hVLM';
+    const PRIVATE_KEY_STAGING = 'private_key_sandbox';
     const DEV_PRIVATE_KEY = 'd09ae647fceb2a30e6fb091e512e7443b092763a13f17ed15e150dc362586afd92571485c24f77a4a3121bc116d8083734e27079a25dc44493496198b84f';
-
-    /**
-     * @var Json
-     */
-    private $json;
 
     /**
      * @var Curl
@@ -49,19 +42,17 @@ class RequestHelper extends \Magento\Framework\App\Helper\AbstractHelper
     protected $encryptor;
 
     public function __construct(
-        \Magento\Framework\App\Helper\Context $context,
-        Json $json,
+        Context $context,
         Curl $curl,
         Data $helper,
+        Logger $logger,
         EncryptorInterface $encryptor,
     ) {
         parent::__construct($context);
         $this->curl = $curl;
         $this->helper = $helper;
         $this->encryptor = $encryptor;
-        $this->json = $json;
-        $this->logger = new Logger(self::LOGTAIL_SOURCE);
-        $this->logger->pushHandler(new LogtailHandler(self::LOGTAIL_SOURCE_TOKEN));
+        $this->logger = $logger;
     }
 
     /**
@@ -174,10 +165,6 @@ class RequestHelper extends \Magento\Framework\App\Helper\AbstractHelper
     {
         $env = $this->getEnvironment();
 
-        /**
-         * Merchant Dev: MAGENTO
-         * Used for local development
-         */
         $devPrivateKey = self::DEV_PRIVATE_KEY;
 
         if ($env == 'develop') {
@@ -188,7 +175,7 @@ class RequestHelper extends \Magento\Framework\App\Helper\AbstractHelper
             $privateKey = $this->helper->getGeneralConfig(self::PRIVATE_KEY_PRODUCTION);
         }
 
-        return $this->encryptor->decrypt($privateKey);
+        return $privateKey;
     }
 
     public function getEnvironment()
