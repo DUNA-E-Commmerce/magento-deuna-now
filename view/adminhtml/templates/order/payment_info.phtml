@@ -1,0 +1,19 @@
+<?php
+/** @var \Deuna\Now\Block\Adminhtml\Order\PaymentInfo $block */
+
+    $payment_info = $block->getPaymentInfo();
+?>
+
+<div class="custom-payment-info">
+    <br>
+    <div class="admin__page-section-item-title">
+        <span class="title"><?= __('Deuna Payment Information') ?></span>
+    </div>
+    <div class="payment-details">
+        <strong><?= __('Procesador de Pago: ') ?></strong><?= $payment_info['processor'] ?><br>
+        <strong><?= __('Estado del Pago: ') ?></strong><?= $payment_info['status'] ?><br>
+        <strong><?= __('Metodo de pago: ') ?></strong><?= $payment_info['method_type'] ?><br>
+        <strong><?= __('Tarjeta: ') ?></strong><?= $payment_info['card_brand'] ?><br>
+        <strong><?= __('Titular Tarjeta: ') ?></strong><?= $payment_info['card_holder'] ?><br>
+    </div>
+</div>
