@@ -210,13 +210,13 @@ class OrderTokens
                         ],
                     ]
                 ],
-                'redirect_url' => $domain . 'checkout/onepage/success',
                 'webhook_urls' => [
                     'notify_order' => $domain . 'rest/V1/orders/notify',
                     'shipping_rate' => '',
-                ]
+                ],
             ]
         ];
+
        return $this->getShippingData($body, $quote, $stores);
     }
 
