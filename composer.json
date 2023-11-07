@@ -10,7 +10,8 @@
     ],
     "require": {
         "php": ">=7.3||<=8.4",
-        "logtail/monolog-logtail": "^0.1.5"
+        "logtail/monolog-logtail": "^0.1.5",
+        "monolog/monolog": "^2.0.0"
     },
     "type": "magento2-module",
     "license": "proprietary",
