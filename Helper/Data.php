@@ -31,7 +31,7 @@ class Data extends AbstractHelper
     public function __construct(
         Context $context,
         ResourceConnection $resource,
-        CollectionFactory $regionCollectionFactory,
+        CollectionFactory $regionCollectionFactory
     ) {
         parent::__construct($context);
         $this->resource = $resource;
