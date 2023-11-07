@@ -22,7 +22,7 @@ class LogtailHelper extends AbstractHelper
     protected $logger;
 
     public function __construct(
-        Context $context,
+        Context $context
     ) {
         parent::__construct($context);
         

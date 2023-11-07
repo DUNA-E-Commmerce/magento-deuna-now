@@ -46,7 +46,7 @@ class RequestHelper extends AbstractHelper
         Curl $curl,
         Data $helper,
         Logger $logger,
-        EncryptorInterface $encryptor,
+        EncryptorInterface $encryptor
     ) {
         parent::__construct($context);
         $this->curl = $curl;
