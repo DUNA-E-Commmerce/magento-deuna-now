@@ -3,7 +3,7 @@
  * @type {Array} components - An array of required module names (e.g., 'jquery', 'mage/url').
  * @type {string} environment - Represents the current environment determined based on the hostname.
  */
-var components = ['jquery'];
+var components = [ 'jquery'];
 var environment;
 
 /**
@@ -15,11 +15,11 @@ var environment;
 var hostname = document.location.hostname;
 
 function getEnvironment() {
-  if (hostname.includes('dev.') || hostname.includes('local.')) {
+  if ( hostname.includes('dev.') || hostname.includes('local.')){
     environment = 'develop';
     components.push('deuna-cdl-dev');
     components.push('deuna-now-dev');
-  } else if (hostname.includes('stg.') || hostname.includes('mcstaging.')) {
+  } else if (hostname.includes('stg.') || hostname.includes('mcstaging.')){
     environment = 'staging';
     console.log(environment);
     components.push('deuna-cdl-stg');
@@ -33,34 +33,6 @@ function getEnvironment() {
 
 getEnvironment();
 
-function onEventDispatch(eventData) {
-  // Handle the different events that can be dispatched.
-  switch (eventData.eventName) {
-    case 'close-modal':
-      // Handle close modal event
-      console.log('Modal closed');
-      break;
-    case 'purchase':
-      // Handle purchase event
-      console.log('Purchase event', eventData.payload);
-
-      fetchJson('POST', hostname + '/rest/V1/deuna/clear-car')
-        .then(function (clearCarResponse) {
-          if (clearCarResponse) {
-            console.log('Success');
-            window.location.href = '/checkout/onepage/success/';
-          } else {
-            console.error('Error while clearing cart.');
-          }
-        })
-        .catch(function (error) {
-          console.error('Error while clearing cart:', error);
-        });
-      break;
-    // Add more cases as needed for other events
-  }
-}
-
 /**
  * Initializes components and handles the click event for the "deuna-button".
  * @function
@@ -68,11 +40,6 @@ function onEventDispatch(eventData) {
  */
 require(components, function ($, DeunaCDL, DeunaNow) {
   'use strict';
-
-  console.log("loading");
-  console.log($, DeunaCDL, DeunaNow);
-
-  // $ = jQuery
 
   var interval = setInterval(checkAndReload, 1000);
 
@@ -112,16 +79,33 @@ require(components, function ($, DeunaCDL, DeunaNow) {
 
               var pay = new window.DeunaPay();
 
-              var configs = {
+              pay.configure({
                 orderToken: orderTokenString,
                 apiKey: DEUNA_PUBLIC_KEY,
                 env: environment,
-                onEventDispatch: onEventDispatch
-              };
-
-              pay.configure(configs).then(function () {
+                platform: "magento"
+              }).then(function (e) {
+                console.log("DeunaPay configured with configs:", e);
                 pay.show({
-                  // ... additional configurations for pay.show if needed
+                  callbacks: {
+                    onClose: function() {
+                      console.log("close");
+                    },
+                    onPaymentSuccess: function() {
+                      fetchJson('POST', hostname + '/rest/V1/deuna/clear-car')
+                      .then(function(clearCarResponse) {
+                        if (clearCarResponse) {
+                          console.log('Success');
+                          window.location.href = '/checkout/onepage/success/';
+                        } else {
+                          console.error('Error while clearing cart.');
+                        }
+                      })
+                      .catch(function(error) {
+                        console.error('Error while clearing cart:', error);
+                      });
+                    },
+                  }
                 });
               }).catch(function (error) {
                 console.error('Error configuring DeunaPay:', error);
@@ -140,8 +124,6 @@ require(components, function ($, DeunaCDL, DeunaNow) {
         alert('Error Getting Public Key');
       });
   });
-
-
 });
 
 /**
@@ -174,8 +156,8 @@ function checkAndReload() {
   var radioElement = document.getElementById('deuna');
 
   if (radioElement) {
-    radioElement.addEventListener('click', function () {
-      location.reload();
-    });
+      radioElement.addEventListener('click', function() {
+          location.reload();
+      });
   }
 }
