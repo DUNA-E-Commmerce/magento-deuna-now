@@ -9,7 +9,7 @@
         }
     ],
     "require": {
-        "php": ">=7.3||<=8.4"
+        "php": ">=7.3||<=7.4"
     },
     "type": "magento2-module",
     "license": "proprietary",
