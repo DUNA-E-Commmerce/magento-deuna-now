@@ -7,7 +7,6 @@ use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Store\Model\ScopeInterface;
-use Deuna\Now\Logger\Logger;
 
 class Data extends AbstractHelper
 {
@@ -17,12 +16,6 @@ class Data extends AbstractHelper
     const XML_PATH_DUNA = 'payment/deuna/';
     const MODE_PRODUCTION = 2;
     const MODE_STAGING = 1;
-
-    /**
-     * Logger instance
-     * @var Logger
-     */
-    protected $logger;
 
     /**
      * @var ResourceConnection
@@ -37,12 +30,10 @@ class Data extends AbstractHelper
 
     public function __construct(
         Context $context,
-        Logger $logger,
         ResourceConnection $resource,
         CollectionFactory $regionCollectionFactory,
     ) {
         parent::__construct($context);
-        $this->logger = $logger;
         $this->resource = $resource;
         $this->regionCollectionFactory = $regionCollectionFactory;
     }
@@ -99,14 +90,13 @@ class Data extends AbstractHelper
     }
 
     /**
-     * Logger instance
      * @param $message
      * @param $type
      * @param array $context
      * @return void
      */
     public function log($type, $message, array $context = []) {
-        $this->logger->{$type}($message, $context);
+        return $message;
     }
 
     /**
