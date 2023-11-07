@@ -3,7 +3,7 @@
  * @type {Array} components - An array of required module names (e.g., 'jquery', 'mage/url').
  * @type {string} environment - Represents the current environment determined based on the hostname.
  */
-var components = [ 'jquery'];
+var components = ['jquery'];
 var environment;
 
 /**
@@ -11,15 +11,17 @@ var environment;
  * @function getEnvironment
  * @returns {void}
  */
-function getEnvironment() {
-  let hostname = document.location.hostname;
 
-  if ( hostname.includes('dev.') || hostname.includes('local.')){
+var hostname = document.location.hostname;
+
+function getEnvironment() {
+  if (hostname.includes('dev.') || hostname.includes('local.')) {
     environment = 'develop';
     components.push('deuna-cdl-dev');
     components.push('deuna-now-dev');
-  } else if (hostname.includes('stg.') || hostname.includes('mcstaging.')){
+  } else if (hostname.includes('stg.') || hostname.includes('mcstaging.')) {
     environment = 'staging';
+    console.log(environment);
     components.push('deuna-cdl-stg');
     components.push('deuna-now-stg');
   } else {
@@ -28,7 +30,36 @@ function getEnvironment() {
     components.push('deuna-now-prod');
   }
 }
+
 getEnvironment();
+
+function onEventDispatch(eventData) {
+  // Handle the different events that can be dispatched.
+  switch (eventData.eventName) {
+    case 'close-modal':
+      // Handle close modal event
+      console.log('Modal closed');
+      break;
+    case 'purchase':
+      // Handle purchase event
+      console.log('Purchase event', eventData.payload);
+
+      fetchJson('POST', hostname + '/rest/V1/deuna/clear-car')
+        .then(function (clearCarResponse) {
+          if (clearCarResponse) {
+            console.log('Success');
+            window.location.href = '/checkout/onepage/success/';
+          } else {
+            console.error('Error while clearing cart.');
+          }
+        })
+        .catch(function (error) {
+          console.error('Error while clearing cart:', error);
+        });
+      break;
+    // Add more cases as needed for other events
+  }
+}
 
 /**
  * Initializes components and handles the click event for the "deuna-button".
@@ -38,75 +69,78 @@ getEnvironment();
 require(components, function ($, DeunaCDL, DeunaNow) {
   'use strict';
 
+  console.log("loading");
+  console.log($, DeunaCDL, DeunaNow);
+
+  // $ = jQuery
+
   var interval = setInterval(checkAndReload, 1000);
 
-  $(document).ready(async function () {
-
+  $(document).ready(function () {
     window.DeunaCDL = DeunaCDL;
     window.DeunaPay = DeunaNow;
 
     var hostname = document.location.origin;
 
-    const DEUNA_PUBLIC_KEY = await fetchJson('GET', hostname + '/rest/V1/deuna/public-key');
-
-    if (!DEUNA_PUBLIC_KEY){
-      alert('Error Getting Keys');
-      return;
-    }
-
-    console.log('Public Key: ' + DEUNA_PUBLIC_KEY);
-
-    $(document).on('click', '.deuna-button', async function (e) {
-
-      var tokenResponse = await fetchJson('GET', hostname + '/rest/V1/Deuna/token');
-
-      var tokenResponseObject = JSON.parse(tokenResponse);
-
-      if (!tokenResponseObject.orderToken){
-        console.log(tokenResponseObject);
-        alert('Error Generating Order Token');
-        return;
-      }
-      var orderToken = tokenResponseObject.orderToken;
-      var orderTokenString = orderToken.toString();
-
-      console.log('Order Token: ' + orderTokenString);
-      console.log('Environment: ' + environment);
-
-      var pay = new window.DeunaPay();
-
-      const configs = {
-        orderToken: orderTokenString,
-        apiKey: DEUNA_PUBLIC_KEY,
-        env: environment,
-      }
-
-      pay.configure(configs);
-      const params = {
-        callbacks: {
-          onPaymentSuccess: async () => {
-            let clearCar = await fetchJson('POST', hostname + '/rest/V1/deuna/clear-car');
-
-            if (clearCar) {
-              console.log('Success');
-              window.location.href = '/checkout/onepage/success/';
-              
-            } else {
-              console.log('Error while clearing cart.');
-            }
-          },
-          onClose: () => {
-            console.log('Error');
-          }
+    fetchJson('GET', hostname + '/rest/V1/deuna/public-key')
+      .then(function (DEUNA_PUBLIC_KEY) {
+        if (!DEUNA_PUBLIC_KEY) {
+          alert('Error Getting Keys');
+          return;
         }
-      }
 
-      pay.show(params)
+        console.log('Public Key: ' + DEUNA_PUBLIC_KEY);
 
-      e.preventDefault();
-    });
+        $(document).on('click', '#deuna-button', function (e) {
+          e.preventDefault();
 
+          fetchJson('GET', hostname + '/rest/V1/Deuna/token')
+            .then(function (tokenResponse) {
+              var tokenResponseObject = JSON.parse(tokenResponse);
+
+              if (!tokenResponseObject.orderToken) {
+                console.error('Error Generating Order Token:', tokenResponseObject);
+                alert('Error Generating Order Token');
+                return;
+              }
+
+              var orderToken = tokenResponseObject.orderToken;
+              var orderTokenString = orderToken.toString();
+
+              console.log('Order Token: ' + orderTokenString);
+              console.log('Environment: ' + environment);
+
+              var pay = new window.DeunaPay();
+
+              var configs = {
+                orderToken: orderTokenString,
+                apiKey: DEUNA_PUBLIC_KEY,
+                env: environment,
+                onEventDispatch: onEventDispatch
+              };
+
+              pay.configure(configs).then(function () {
+                pay.show({
+                  // ... additional configurations for pay.show if needed
+                });
+              }).catch(function (error) {
+                console.error('Error configuring DeunaPay:', error);
+              });
+
+            })
+            .catch(function (error) {
+              console.error('Error Getting Order Token:', error);
+              alert('Error Getting Order Token');
+            });
+        });
+
+      })
+      .catch(function (error) {
+        console.error('Error Getting Public Key:', error);
+        alert('Error Getting Public Key');
+      });
   });
+
 
 });
 
@@ -138,10 +172,10 @@ async function fetchJson(method, urlRequest) {
  */
 function checkAndReload() {
   var radioElement = document.getElementById('deuna');
-  
+
   if (radioElement) {
-      radioElement.addEventListener('click', function() {
-          location.reload();
-      });
+    radioElement.addEventListener('click', function () {
+      location.reload();
+    });
   }
 }

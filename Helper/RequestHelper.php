@@ -7,7 +7,7 @@ use Magento\Framework\Encryption\EncryptorInterface;
 use Magento\Framework\HTTP\Adapter\Curl;
 use Deuna\Now\Helper\LogtailHelper as Logger;
 use Deuna\Now\Helper\Data;
-use Laminas\Http\Request;
+use Magento\Framework\App\Request\Http;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 
@@ -41,6 +41,11 @@ class RequestHelper extends AbstractHelper
      */
     protected $encryptor;
 
+    /**
+     * @var Http
+     */
+    protected $request;
+
     public function __construct(
         Context $context,
         Curl $curl,
@@ -65,24 +70,25 @@ class RequestHelper extends AbstractHelper
         try {
             switch ($method) {
                 case 'POST':
-                    $method = Request::METHOD_POST;
+                    $method = Http::METHOD_POST; // Reemplazo de Request::METHOD_POST
                     break;
                 case 'PUT':
-                    $method = Request::METHOD_PUT;
+                    $method = Http::METHOD_PUT; // Reemplazo de Request::METHOD_PUT
                     break;
                 case 'DELETE':
-                    $method = Request::METHOD_DELETE;
+                    $method = Http::METHOD_DELETE; // Reemplazo de Request::METHOD_DELETE
                     break;
                 case 'HEAD':
-                    $method = Request::METHOD_HEAD;
+                    $method = Http::METHOD_HEAD; // Reemplazo de Request::METHOD_HEAD
                     break;
                 case 'OPTIONS':
-                    $method = Request::METHOD_OPTIONS;
+                    $method = Http::METHOD_OPTIONS; // Reemplazo de Request::METHOD_OPTIONS
                     break;
                 default:
-                    $method = Request::METHOD_GET;
+                    $method = Http::METHOD_GET; // Reemplazo de Request::METHOD_GET
                     break;
             }
+
 
             $url = $this->getUrl() . $endpoint;
             $http_ver = '1.1';
