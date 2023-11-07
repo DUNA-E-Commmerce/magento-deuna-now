@@ -57,7 +57,7 @@ class OrderTokens
      * @var Category
      */
     private $category;
-    
+
     private $coupon;
 
     private $saleRule;
@@ -499,14 +499,13 @@ class OrderTokens
 
             $body = json_encode($this->getBody($quote));
 
-            $endpoint = '/merchants/orders'; 
+            $endpoint = '/merchants/orders';
 
             $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
             $requestHelper = $objectManager->get(\Deuna\Now\Helper\RequestHelper::class);
-            
+
 
             $response = $requestHelper->request($endpoint, 'POST', $body);
-            
             list(, $response) = explode("\r\n\r\n", $response, 2);
 
             $response = json_decode($response, true);
@@ -526,7 +525,8 @@ class OrderTokens
 
         } catch (Exception $e) {
 
-            var_dump($e);die;
+            echo 'Error: ' . $e->getMessage();
+            die;
         }
     }
 

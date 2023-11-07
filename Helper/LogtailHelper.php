@@ -5,7 +5,7 @@ namespace Deuna\Now\Helper;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Monolog\Logger;
-use Logtail\Monolog\LogtailHandler;
+// use Logtail\Monolog\LogtailHandler;
 
 class LogtailHelper extends AbstractHelper
 {
@@ -22,12 +22,12 @@ class LogtailHelper extends AbstractHelper
     protected $logger;
 
     public function __construct(
-        Context $context,
+        Context $context
     ) {
         parent::__construct($context);
         
         $this->logger = new Logger(self::LOGTAIL_SOURCE);
-        $this->logger->pushHandler(new LogtailHandler(self::LOGTAIL_SOURCE_TOKEN));
+        // $this->logger->pushHandler(new LogtailHandler(self::LOGTAIL_SOURCE_TOKEN));
     }
 
     public function info($message, $data = [])
