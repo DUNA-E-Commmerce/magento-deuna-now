@@ -134,7 +134,7 @@ class RequestHelper extends AbstractHelper
     }
 
     /**
-     * @return string
+     * @return string|null
      */
     private function getUrl(): string
     {
@@ -154,7 +154,7 @@ class RequestHelper extends AbstractHelper
     }
 
     /**
-     * @return string[]
+     * @return string[]|null
      */
     private function getHeaders(): array
     {
@@ -165,9 +165,9 @@ class RequestHelper extends AbstractHelper
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getPrivateKey(): string
+    public function getPrivateKey()
     {
         $env = $this->getEnvironment();
 
